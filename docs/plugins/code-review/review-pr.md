@@ -9,6 +9,10 @@ Comprehensive pull request review using all specialized agents. Posts only high-
 /code-review:review-pr ["PR number or review-aspects"]
 ```
 
+## CI/CD Integration
+
+You can intergreate this plugin with your CI/CD pipeline by using Offical Anthropics Claude Code Action. See [CI/CD Integration](../../guides/ci-integration.md) for more details.
+
 ## Arguments
 
 PR number (e.g., #123, 123) and/or review aspects to focus on
