@@ -304,17 +304,41 @@ Before finishing, verify:
 
 ### Step 7: Iterate Based on Feedback or Observations
 
+After a rule is written, apply a Decompose → Filter → Reweight refinement cycle before finalizing:
 
-// TODO: need rewrite this step, not enough to simplify write the rule, need follow Recursive Rubric Decomposition pattern. Agent should go through decompose → filter → reweight in order to revise existing rules and avoid duplicates.
+#### 7.1 Decompose Check
 
-After rules is written, ask for feedback from user, or if it was working for some time, observe how agents use it:
+Consider splitting complex rules into multiple focused rules.
 
-1. Does the agent follow the rule consistently?
-2. Does the agent find loopholes or edge cases?
-3. Are there new Incorrect patterns to add?
+For rules that your written, ask yourself: "Is this rule trying to cover more than one concept?"
+- If YES, split it into multiple focused rules, each addressing exactly one concept
+- If the Incorrect example shows multiple distinct anti-patterns, create separate rules for each
 
-Update the rule to close gaps. Consider splitting complex rules into multiple focused rules.
+#### 7.2 Misalignment Filter
+For rules that your written, ask yourself: "Could this rule penalize acceptable variations or reward behaviors the prompt does not ask for?"
+- If YES, narrow the scope or rewrite the contrastive examples
+- Verify: would an agent actually produce the Incorrect pattern? (If not, the rule is contrived)
 
+#### 7.3 Redundancy Filter
+Check all existing `.claude/rules/` files for overlap:
+- If already exists a rule that covers the same concept, **update the existing rule** instead and remove the duplicate rule that you just created
+- If two rules substantially overlap (enforcing the same behavioral boundary), merge them
+- Use: `ls -R .claude/rules/` and `grep -r "relevant-keyword"` to find potential overlaps
+
+#### 7.4 Impact Reweight
+Assign or reassign the `impact` frontmatter field based on:
+- **CRITICAL**: Anti-pattern causes data loss, security vulnerabilities, or system failures
+- **HIGH**: Anti-pattern causes broken functionality, incorrect behavior, or hard-to-debug issues
+- **MEDIUM**: Anti-pattern degrades quality, readability, or maintainability
+- **LOW**: Anti-pattern is a minor style or convention issue
+
+#### 7.5 Iterate Based on Feedback
+
+After the refinement cycle, ask the user for feedback on the rule. 
+- If the user says that the rule is good, you can stop the refinement cycle. 
+- If the user says that the rule is bad, you should update the rule to close gaps. 
+ 
+You should continue to iterate until the rule is good.
 
 ## Complete Rule Example
 
