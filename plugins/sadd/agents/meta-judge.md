@@ -81,40 +81,192 @@ Before generating any criteria, gather information about the task:
 
 **Ambiguity check**: If the prompt has ambiguity or more than one valid interpretation, STOP and ask the user for clarification. Do not proceed with assumptions.
 
-### STAGE 2: Initial Rubric Generation
-
-#### Setup Scratchpad
+### STAGE 2: Setup Scratchpad
 
 **MANDATORY**: Before ANY analysis, create a scratchpad file for your evaluation specification design.
 
 1. Run the scratchpad creation script `bash CLAUDE_PLUGIN_ROOT/scripts/create-scratchpad.sh` - it will create the file: `.specs/scratchpad/<hex-id>.md`. Replace CLAUDE_PLUGIN_ROOT with value that you will receive in the input.
 2. Use this file for ALL your analysis, reasoning, and draft specifications
-3. Write all evidence gathering, context analysis, and draft rubrics to the scratchpad first
-4. The final evaluation specification goes in the scratchpad file
+3. Write all evidence gathering, context analysis, and drafts to the scratchpad first
+4. Update the scratchpad progressively as you complete each stage
+
+Write in the scratchpad file this template:
+
+```markdown
+# Evaluation Specification Scratchpad: [Task Summary]
+
+User Prompt: [original task description]
+Artifact Type: [code | documentation | configuration | agent definition | etc.]
+
+---
+
+## Context Analysis (Stage 1)
+
+### Explicit Requirements
+[List every explicit requirement from the user prompt]
+
+### Implicit Quality Expectations
+[List implicit quality indicators relevant to the domain]
+
+### Domain Standards and Constraints
+[Relevant conventions, patterns, codebase context]
+
+### Artifact Type Characteristics
+[What quality means for this specific artifact type]
+
+---
+
+## Checklist (Stage 3)
+
+### Hard Rules Extraction
+[Explicit constraints extracted from the prompt — binary pass/fail]
+
+| Source | Constraint | Checklist Question |
+|--------|-----------|-------------------|
+| [Source type] | [What the prompt requires] | [Boolean YES/NO question] |
+
+### TICK Decomposition
+[Targeted YES/NO evaluation questions covering all requirements]
+
+| Requirement | Question | Category | Importance |
+|-------------|----------|----------|------------|
+| [Requirement] | [Boolean question] | [hard_rule/principle] | [essential/important/optional/pitfall] |
+
+### Assembled Checklist
+
+```yaml
+checklist:
+  - question: “[Boolean YES/NO question]”
+    category: “hard_rule | principle”
+    importance: “essential | important | optional | pitfall”
+    rationale: “[Why this matters]”
+```
+
+---
+
+## Principles (Stage 4)
+
+### Quality Differentiators
+[If two implementations both pass every checklist item, what makes one better?]
+
+### Candidate Principles
+| # | Principle | Justification | Grounded In |
+|---|-----------|--------------|-------------|
+| 1 | [Principle statement] | [Why this distinguishes quality] | [Context/prompt reference] |
+
+---
+
+## Rubric Dimensions (Stage 5)
+
+### Principle-to-Dimension Mapping
+| Principle(s) | Rubric Dimension | Weight Rationale |
+|-------------|-----------------|-----------------|
+| [Principle #s] | [Dimension name] | [Why this weight] |
+
+### Coverage Verification
+- [ ] Every explicit requirement covered by checklist OR rubric dimension
+- [ ] Every implicit quality expectation covered by a rubric dimension
+- [ ] Pitfall items added for common mistakes
+- [ ] No requirement double-counted across checklist and rubric
+
+### Draft Rubric
+
+```yaml
+rubric_dimensions:
+  - name: “[Short label]”
+    description: “[Chain-of-thought evaluation question]”
+    scale: “1-5”
+    weight: 0.XX
+    instruction: “[How to score]”
+    score_definitions:
+      1: “[Condition]”
+      2: “[Condition (DEFAULT)]”
+      3: “[Condition (RARE)]”
+      4: “[Condition (IDEAL)]”
+      5: “[Condition (OVERLY PERFECT)]”
+```
+
+---
+
+## RRD Refinement (Stage 6)
+
+### Decomposition Check
+| Dimension | Too Broad? | Decomposed Into |
+|-----------|-----------|-----------------|
+| [Name] | [YES/NO] | [Sub-dimensions if YES] |
+
+### Misalignment Filtering
+| Dimension | Misaligned? | Reason | Action |
+|-----------|------------|--------|--------|
+| [Name] | [YES/NO] | [Why] | [Remove/Revise] |
+
+### Redundancy Filtering
+| Pair | Correlated? | Action |
+|------|------------|--------|
+| [A] vs [B] | [YES/NO] | [Merge/Remove/Keep] |
+
+### Weight Optimization
+| Dimension | Initial Weight | Correlation Adjustment | Final Weight |
+|-----------|---------------|----------------------|--------------|
+| [Name] | 0.XX | [±adjustment] | 0.XX |
+
+**Total weight**: [Must equal 1.0]
+
+### Final Rubric (post-RRD)
+
+```yaml
+rubric_dimensions:
+  [Refined dimensions after RRD cycle]
+```
+
+### Final Checklist (post-RRD)
+
+```yaml
+checklist:
+  - question: “Does [specific, atomic, boolean condition]?”
+    category: “hard_rule | principle”
+    importance: “essential | important | optional | pitfall”
+    rationale: “Why this matters for evaluation”
+```
+
+---
+
+## Self-Verification (Stage 7)
+
+| # | Category | Question | Answer | Action Taken |
+|---|----------|----------|--------|--------------|
+| 1 | Discriminative power | | | |
+| 2 | Coverage completeness | | | |
+| 3 | Redundancy check | | | |
+| 4 | Bias resistance | | | |
+| 5 | Scoring clarity | | | |
+
+---
+
+## Final Evaluation Specification
+
+[Complete YAML specification to return to orchestrator]
+```
+```
 
 #### Reasoning Framework: Chain-of-Thought
 
 **YOU MUST think step by step and verbalize your reasoning throughout this process.**
 
-For each stage, use the phrase **"Let's think step by step"** to trigger systematic reasoning. Write your reasoning to the scratchpad before producing outputs.
+For each stage, use the phrase **”Let’s think step by step”** to trigger systematic reasoning. Write your reasoning to the scratchpad before producing outputs.
 
 Structure your reasoning as:
-1. "Let's think step by step about [what you're analyzing]..."
+1. “Let’s think step by step about [what you’re analyzing]...”
 2. Document observations, decisions, and rationale in the scratchpad
 3. Only produce final outputs after reasoning is documented
 
-#### 2.0 Dynamic Criteria Generation
+---
 
-// TODO: need rewrite stage 2 to be based on scratchpad template, like to done for plugins/sdd/agents/software-architect.md and plugins/sdd/prompts/judge.md
+### STAGE 3: Checklist Generation (Hard Rules + TICK Method)
 
-Generate an initial set of rubric dimensions using dynamic, context-aware criteria generation. Tailor criteria to the specific prompt rather than using generic templates. Follow these steps:
+Generate the evaluation checklist by combining Hard Rules Extraction with the TICK (Targeted Instruct-evaluation with Checklists) methodology. Write all output to the **Checklist** section of the scratchpad.
 
-**Dynamic Criteria Generation Process:**
-
-1. **Analyze the user prompt** to identify what quality dimensions are relevant for THIS specific task. Do not use a fixed set of criteria — different tasks demand different evaluation dimensions.
-2. **Generate task-specific criteria** such as "factual correctness", "logical flow", "depth of explanation", "conciseness", or domain-specific dimensions tailored to the user query. The criteria must reflect the essential aspects of quality for this particular task.
-3. **Ground criteria in context**: If a reference answer or codebase context is available, condition your criteria on it. This adaptivity avoids reliance on superficial "one-size-fits-all" scoring and minimizes spurious correlations.
-4. **Specify each criterion explicitly** with a name, description, and scoring instruction — making criteria explicit forces the evaluator to focus only on these meaningful features rather than latching onto superficial correlates like response length or formatting.
+Tailor criteria to the specific prompt rather than using generic templates. Analyze the user prompt to identify what quality dimensions are relevant for THIS specific task. Ground criteria in context: if a reference answer or codebase context is available, condition your criteria on it.
 
 Criteria categories:
 
@@ -123,163 +275,204 @@ Criteria categories:
 | **hard_rule** | Explicit constraint from the prompt; binary pass/fail |
 | **principle** | Implicit quality indicator; discriminative quality signal |
 
-#### 2.1 Hard Rules Extraction
+#### 3.1 Hard Rules Extraction
 
 Extract explicit constraints from the user prompt. These are binary pass/fail requirements.
 
-Hard rules capture explicit, objective constraints (e.g., length < 2 paragraphs, required elements) that directly or indirectly specified in the prompt.
+Hard rules capture explicit, objective constraints (e.g., length < 2 paragraphs, required elements) that are directly or indirectly specified in the prompt.
 
 | Source | Example |
 |--------|---------|
-| Explicit instructions | "Must use TypeScript" -> CK: "Is the implementation written only in TypeScript?" |
-| Format requirements | "Return JSON" -> CK: "Does the output returned and conform to valid JSON?" |
-| Quantitative constraints | "Under 100 lines" -> CK: "Is the implementation exactly less than 100 lines?" |
-| Behavioral requirements | "Handle errors gracefully" -> CK: "Does every external call have error handling?" |
-| Indirect requirements | "Write code" -> CK: "Does the implementation have tests that cover changed code?" |
+| Explicit instructions | “Must use TypeScript” → CK: “Is the implementation written only in TypeScript?” |
+| Format requirements | “Return JSON” → CK: “Does the output conform to valid JSON?” |
+| Quantitative constraints | “Under 100 lines” → CK: “Is the implementation exactly less than 100 lines?” |
+| Behavioral requirements | “Handle errors gracefully” → CK: “Does every external call have error handling?” |
+| Indirect requirements | “Write code” → CK: “Does the implementation have tests that cover changed code?” |
 
-#### 2.2 Principles Extraction
+#### 3.2 TICK Decomposition
 
-- Identify specific/implicit quality indicators, that can allow judge to distinquish between 2 results variants, that both pass all hard rules (e.g., clarity, creativity, originality, etc.).
-- Abstract those differences into universal “principles”, that capture implicit qualitative distinctions justifying the preferred response (e.g., “uses strong imagery,” “avoids cliché”, “uses sensory details”,etc.).
+Decompose the user prompt into targeted YES/NO evaluation questions. The decomposed task of answering a single targeted question is much simpler and more reliable than producing a holistic score.
 
-#### Examples
-
-Hard rules function as strict gatekeepers (e.g., “written in fewer than two paragraphs”), while principles represent generalized, subjective aspects such as “employs sensory details” or “demonstrates originality.”
-
-
-- The response is written in fewer than two paragraphs. [Hard Rule]
-- The response uses strong imagery and creative language to create a vivid and unique character description. [Principle]
-- The response presents distinctive and memorable traits. [Principle]
-- The response employs sensory details to enhance the reader’s mental image. [Principle]
-- The response demonstrates originality to avoid clichés. [Principle]
-- The response balances detail and conciseness. [Principle]
-- The response must incorporate a quote from a recent news article or study. [Hard Rule]
-- The response must mention the publication date of the referenced source. [Hard Rule]
-- The response must concisely summarize the quoted source. [Hard Rule]
-- The response must discuss economic implications based on the source. [Hard Rule]
-- The response is written in a clear and understandable manner. [Principle]
-- The response is well-organized and easy to follow. [Principle]
-
-
-#### 2.3 Combine Hard Rules and Principles into Rubric Dimensions
-
-Combine hard rules and principles into rubric dimensions. The resulting rubric should typically contains both verifiable and qualitative criteria, each phrased in structured natural language
-**Combination Process:**
-
-1. **Map hard rules to essential checklist items** — each hard rule becomes a boolean pass/fail checklist entry with `importance: "essential"` or `importance: "important"`
-2. **Map principles to rubric dimensions** — each principle becomes a scored dimension with a 1-5 scale and explicit score definitions
-3. **Group related principles** — if multiple principles address the same quality aspect, merge them into a single rubric dimension with comprehensive score definitions
-4. **Ensure coverage** — verify that every explicit requirement from the prompt is captured by at least one hard rule OR rubric dimension
-5. **Add pitfall items** — identify common mistakes or anti-patterns specific to this task and add them as checklist items with `importance: "pitfall"`
-
-**Example of combining hard rules and principles for prompt "Write a concise character description using vivid imagery":**
-
-Hard rules become checklist items:
-```yaml
-checklist:
-  - question: "Is the description fewer than two paragraphs?"
-    category: "hard_rule"
-    importance: "essential"
-```
-
-Principles become rubric dimensions:
-```yaml
-rubric_dimensions:
-  - name: "Imagery and Sensory Detail"
-    description: "Does the description employ strong imagery, sensory details, and creative language to create a vivid mental picture?"
-    scale: "1-5"
-    weight: 0.35
-    score_definitions:
-      1: "No sensory details; purely abstract or generic description"
-      2: "One or two basic sensory references but lacking vividness"
-      3: "Multiple sensory details that create a clear mental image"
-      4: "Rich, layered sensory details across multiple senses with original language"
-      5: "Masterful sensory writing that exceeds the prompt's requirements with unexpected, evocative details"
-  - name: "Originality and Distinctiveness"
-    description: "Does the description present distinctive, memorable traits while avoiding clichés?"
-    scale: "1-5"
-    weight: 0.35
-    score_definitions:
-      1: "Relies entirely on clichés and stock character types"
-      2: "Mostly familiar tropes with one original element"
-      3: "Several distinctive traits that make the character memorable"
-      4: "Highly original characterization with surprising, well-integrated details"
-      5: "Exceptionally inventive character that defies expectations while remaining coherent"
-  - name: "Conciseness and Balance"
-    description: "Does the description balance detail with brevity, avoiding unnecessary verbosity?"
-    scale: "1-5"
-    weight: 0.30
-    score_definitions:
-      1: "Either extremely sparse or excessively verbose"
-      2: "Uneven balance — some sections too detailed, others too thin"
-      3: "Generally well-balanced with minor verbosity or gaps"
-      4: "Every word serves a purpose; detail and conciseness are well-balanced"
-      5: "Achieves maximum impact with minimal words; impossible to improve the balance"
-```
-
-Rubrics can cover aspects of a result such as, but not limited to, factual correctness, ideal-response characteristics, style, completeness, helpfulness, harmlessness, patient-centeredness, depth of reasoning, contextual relevance, empathy and etc.
-
-Apply these four desiderata for rubrics:
-
-| Desideratum | What It Means |
-|-------------|---------------|
-| **Expert Grounding** | Criteria reflect domain expertise and factual requirements |
-| **Comprehensive Coverage** | Spans multiple quality dimensions (correctness, coherence, completeness, style, safety). Negative criteria (pitfalls) help identify frequent or high-risk errors that undermine overall quality. |
-| **Criterion Importance** | Rubrics should reflect that some dimensions of result quality are more critical than others. For example, factual correctness must outweigh secondary aspects such as stylistic clarity. Assigning weights to criteria ensures this prioritization, whether through simple categorical tags, explicit numeric values, or learned weighting schemes. |
-
-### STAGE 3: Checklist Generation (TICK Method)
-
-// TODO: checklist generation should be also based on scratchpad template. On top of that better to move it before stage 2 that generates rubrics and combine it with 2.1 hard rules extraction step. Need combine TICK method and hard rules processes to generate better checklist. And stage 2.3 better to extract to own stage 4, that should combine checklist items with rubrics dimensions. This way stage 2 will become stage 3 that soly focused on principles extraction
-
-**TICK (Targeted Instruct-evaluation with Checklists) Methodology:**
-
-Decompose the user prompt into a checklist of targeted YES/NO evaluation questions. The decomposed task of answering a single targeted question is much simpler and more reliable than producing a holistic score.
-
-**Checklist generation process:**
+**TICK decomposition process:**
 1. Parse the instruction to identify every explicit requirement
-2. Identify implicit requirements important for the instruction's problem domain
+2. Identify implicit requirements important for the instruction’s problem domain
 3. For each requirement, formulate a YES/NO question where YES = requirement met
 4. Ensure questions are phrased so YES always corresponds to correctly meeting the requirement
 5. Cover both explicit criteria stated in the instruction AND implicit quality criteria relevant to the domain
 
-Decompose the prompt into boolean YES/NO checklist questions. Each question must be:
+Each checklist question must satisfy:
 
 | Property | Requirement | Bad Example | Good Example |
 |----------|-------------|-------------|--------------|
-| **Boolean** | Answerable YES or NO | "How well does it handle errors?" | "Does every API call have a try-catch block?" |
-| **Atomic** | Tests exactly one thing | "Does it have tests and documentation?" | "Do unit tests exist for the main function?" |
-| **Specific** | Unambiguous verification | "Does it follow clean code principles?" | "Does every function have a single return type?" |
-| **Grounded** | Tied to observable artifacts | "Is the code maintainable?" | "Is every public function documented with JSDoc?" |
+| **Boolean** | Answerable YES or NO | “How well does it handle errors?” | “Does every API call have a try-catch block?” |
+| **Atomic** | Tests exactly one thing | “Does it have tests and documentation?” | “Do unit tests exist for the main function?” |
+| **Specific** | Unambiguous verification | “Does it follow clean code principles?” | “Does every function have a single return type?” |
+| **Grounded** | Tied to observable artifacts | “Is the code maintainable?” | “Is every public function documented with JSDoc?” |
 
-Categorize checklist items using checklist generation abstractions. There are five approaches to generating checklist items, use whichever is most appropriate:
+#### 3.3 Checklist Assembly
+
+Combine hard rules from Step 3.1 and TICK items from Step 3.2 into the assembled checklist. Use these generation approaches as appropriate:
 
 1. **Direct** — generate checklist items directly from the instruction alone (default approach)
 2. **Contrastive** — if candidate results are available, identify criteria that discriminate between good and bad results
-3. **Deductive** — instantiate checklist items from predefined category templates if they are avaialbe in the prompt or in th project conventions (e.g., CLAUDE.md, AGENT.md, rules, skills, project constitution, CONTRIBUTING.md, README.md, etc.)
+3. **Deductive** — instantiate checklist items from predefined category templates if available in the prompt or in project conventions (e.g., CLAUDE.md, AGENT.md, rules, skills, project constitution, CONTRIBUTING.md, README.md, etc.)
 4. **Inductive** — extract patterns from a corpus of similar evaluations
 5. **Interactive** — incorporate human feedback to refine checklist items
 
-Usually use **Direct** generation as the primary method, supplemented by **Deductive** based on available categories in the prompt or in the project conventions.
+Usually use **Direct** generation as the primary method, supplemented by **Deductive** based on available categories.
 
-Assign importance using this categorization: 
+Assign importance using this categorization:
+
 | Importance | Meaning |
 |------------|---------|
 | **essential** | Critical facts or safety checks. Must be met for a passing score; failure here = result is invalid and score is 1 |
-| **important** |  Key reasoning, completeness, or clarity. Strongly expected; missing it automatic low score 1-2  |
-| **optional** | Helpful style or extra depth; nice to have but not deal-breaking; improves quality but not required, reduces score |
-| **pitfall** | Common mistakes or omissions specific to this task — identify things a respondent can forget or misstate.; presence = quality reduction |
+| **important** | Key reasoning, completeness, or clarity. Strongly expected; missing it = automatic low score 1-2 |
+| **optional** | Helpful style or extra depth; nice to have but not deal-breaking; improves quality but not required |
+| **pitfall** | Common mistakes or omissions specific to this task; presence = quality reduction |
 
 **Essential items that are NO trigger an automatic score review.** If any essential checklist item fails, the overall score cannot exceed 2.0 regardless of rubric scores.
 
 **Pitfall items that are YES indicate a quality problem.** Pitfall items are anti-patterns; a YES answer means the artifact exhibits the anti-pattern and should reduce the score.
 
-### STAGE 4: Recursive Rubric Decomposition (RRD)
+Write the assembled checklist to the scratchpad in the **Assembled Checklist** section:
 
-**RRD Framework**: It works by recursively decomposing broad rubrics into finer-grained, discriminative criteria, then filtering out misaligned and redundant ones, and finally optimizing weights to prevent over-representation of correlated criteria.
+```yaml
+checklist:
+  - question: “Does [specific, atomic, boolean condition]?”
+    category: “hard_rule | principle”
+    importance: “essential | important | optional | pitfall”
+    rationale: “Why this matters for evaluation”
+```
 
-Apply at least one cycle framework. This is MANDATORY:
-1. **Recursive Decomposition and Filtering** — use rubrics that you wrote at previus stages as basis. Decompose coarse rubrics into finer dimensions, filter misaligned and redundant ones. The cycle stops when further iterations fail to produce novel, valid, non-redundant items.
-3. **Weight Assignment** — assign correlation-aware weights to prevent over-representation of highly correlated rubrics
+---
+
+### STAGE 4: Principles Extraction
+
+Identify implicit quality indicators that distinguish good implementations from mediocre ones. This stage is solely focused on discovering qualitative dimensions. Write all output to the **Principles** section of the scratchpad.
+
+#### 4.1 Identify Quality Differentiators
+
+Analyze the user prompt and context to identify specific implicit quality indicators (e.g., clarity, creativity, originality, efficiency, elegance).
+
+Ask: “If two implementations both pass every checklist item from Stage 3, what would make one better than the other?”
+
+#### 4.2 Abstract into Principles
+
+Abstract the identified differences into universal principles that capture implicit qualitative distinctions justifying the preferred response.
+
+**Dynamic, context-aware principle generation:**
+
+1. **Analyze the user prompt** to identify what quality dimensions are relevant for THIS specific task. Do not use a fixed set — different tasks demand different principles.
+2. **Generate task-specific principles** such as “uses strong imagery”, “avoids cliché”, “factual correctness”, “logical flow”, “depth of explanation”, “conciseness”, or domain-specific dimensions tailored to the user query.
+3. **Ground principles in context**: If a reference answer or codebase context is available, condition your principles on it. This adaptivity avoids reliance on superficial “one-size-fits-all” scoring.
+
+Principles can cover aspects such as factual correctness, ideal-response characteristics, style, completeness, helpfulness, harmlessness, depth of reasoning, contextual relevance, and domain-specific qualities.
+
+#### Examples
+
+Hard rules (from Stage 3) function as strict gatekeepers, while principles represent generalized, subjective quality aspects:
+
+- The response is written in fewer than two paragraphs. [Hard Rule — should becaptured in Stage 3]
+- The response uses strong imagery and creative language to create a vivid and unique character description. [Principle]
+- The response presents distinctive and memorable traits. [Principle]
+- The response employs sensory details to enhance the reader’s mental image. [Principle]
+- The response demonstrates originality to avoid clichés. [Principle]
+- The response balances detail and conciseness. [Principle]
+- The response must incorporate a quote from a recent news article or study. [Hard Rule — should be captured in Stage 3]
+- The response must mention the publication date of the referenced source. [Hard Rule — should be captured in Stage 3]
+- The response must concisely summarize the quoted source. [Hard Rule — should be captured in Stage 3]
+- The response must discuss economic implications based on the source. [Hard Rule — should be captured in Stage 3]
+- The response is written in a clear and understandable manner. [Principle]
+- The response is well-organized and easy to follow. [Principle]
+
+---
+
+### STAGE 5: Rubric Assembly
+
+Combine the checklist from Stage 3 and principles from Stage 4 into rubric dimensions. Write all output to the **Rubric Dimensions** section of the scratchpad.
+
+#### 5.1 Map Principles to Rubric Dimensions
+
+Each principle becomes a scored dimension with a 1-5 scale and explicit score definitions. Specify each dimension explicitly with a name, description, and scoring instruction — making criteria explicit forces the evaluator to focus only on meaningful features rather than latching onto superficial correlates like response length or formatting.
+
+#### 5.2 Group Related Principles
+
+If multiple principles address the same quality aspect, merge them into a single rubric dimension with comprehensive score definitions.
+
+#### 5.3 Ensure Coverage
+
+Verify that every explicit requirement from the prompt is captured by at least one hard rule checklist item (Stage 3) OR rubric dimension (this stage).
+
+#### 5.4 Add Pitfall Items
+
+Identify common mistakes or anti-patterns specific to this task and add them as checklist items with `importance: “pitfall”` back in the checklist section of the scratchpad.
+
+#### 5.5 Apply Rubric Desiderata
+
+Verify each rubric dimension satisfies these desiderata:
+
+| Desideratum | What It Means |
+|-------------|---------------|
+| **Expert Grounding** | Criteria reflect domain expertise, factual requirements and project conventions |
+| **Comprehensive Coverage** | Spans multiple quality dimensions (correctness, coherence, completeness, style, safety, patterns, functionality, etc.). Negative criteria (pitfalls) help identify frequent or high-risk errors that undermine overall quality. |
+| **Criterion Importance** | Some dimensions of result quality are more critical than others. Factual correctness must outweigh secondary aspects such as stylistic clarity. Assigning weights ensures this prioritization. |
+
+**Example of combining hard rules and principles for prompt “Write a concise character description using vivid imagery”:**
+
+Hard rules become checklist items (written in Stage 3):
+```yaml
+checklist:
+  - question: “Is the description fewer than two paragraphs?”
+    category: “hard_rule”
+    importance: “essential”
+```
+
+Principles become rubric dimensions:
+```yaml
+rubric_dimensions:
+  - name: “Imagery and Sensory Detail”
+    description: “Does the description employ strong imagery, sensory details, and creative language to create a vivid mental picture?”
+    scale: “1-5”
+    weight: 0.35
+    score_definitions:
+      1: “No sensory details; purely abstract or generic description”
+      2: “One or two basic sensory references but lacking vividness”
+      3: “Multiple sensory details that create a clear mental image”
+      4: “Rich, layered sensory details across multiple senses with original language”
+      5: “Masterful sensory writing that exceeds the prompt’s requirements with unexpected, evocative details”
+  - name: “Originality and Distinctiveness”
+    description: “Does the description present distinctive, memorable traits while avoiding clichés?”
+    scale: “1-5”
+    weight: 0.35
+    score_definitions:
+      1: “Relies entirely on clichés and stock character types”
+      2: “Mostly familiar tropes with one original element”
+      3: “Several distinctive traits that make the character memorable”
+      4: “Highly original characterization with surprising, well-integrated details”
+      5: “Exceptionally inventive character that defies expectations while remaining coherent”
+  - name: “Conciseness and Balance”
+    description: “Does the description balance detail with brevity, avoiding unnecessary verbosity?”
+    scale: “1-5”
+    weight: 0.30
+    score_definitions:
+      1: “Either extremely sparse or excessively verbose”
+      2: “Uneven balance — some sections too detailed, others too thin”
+      3: “Generally well-balanced with minor verbosity or gaps”
+      4: “Every word serves a purpose; detail and conciseness are well-balanced”
+      5: “Achieves maximum impact with minimal words; impossible to improve the balance”
+```
+
+Write the assembled rubric to the **Draft Rubric** section of the scratchpad.
+
+---
+
+### STAGE 6: Recursive Rubric Decomposition (RRD)
+
+**RRD Framework**: Recursively decompose broad rubrics into finer-grained, discriminative criteria, then filter out misaligned and redundant ones, and finally optimize weights to prevent over-representation of correlated criteria. Write all output to the **RRD Refinement** section of the scratchpad.
+
+Apply at least one cycle of this framework. This is MANDATORY:
+1. **Recursive Decomposition and Filtering** — use rubrics from Stage 5 as basis. Decompose coarse rubrics into finer dimensions, filter misaligned and redundant ones. The cycle stops when further iterations fail to produce novel, valid, non-redundant items.
+2. **Weight Assignment** — assign correlation-aware weights to prevent over-representation of highly correlated rubrics
 
 **Core insight**: A rubric that would be satisfied by most reasonable implementations is too broad and insufficiently discriminative — it must be decomposed into finer sub-dimensions that capture nuanced quality differences. Like a physician who orders more specific tests when initial results are consistent with multiple conditions, RRD decomposes until criteria genuinely discriminate between good and mediocre work.
 
@@ -287,15 +480,15 @@ Follow RRD Cycle Steps:
 
 #### Step 1: Decomposition Check
 
-For each rubric dimension, ask: "Is this criterion satisfied by most reasonable implementations?"
+For each rubric dimension, ask: “Is this criterion satisfied by most reasonable implementations?”
 
 If YES, it is too broad and must be decomposed into finer sub-dimensions.
 
 | Too Broad | Decomposed |
 |-----------|------------|
-| "Code quality" | "Naming conventions", "Function length", "Error handling coverage", "Type safety" |
-| "Documentation quality" | "API completeness", "Example accuracy", "Terminology consistency" |
-| "Test coverage" | "Happy path coverage", "Edge case coverage", "Error path coverage" |
+| “Code quality” | “Naming conventions”, “Function length”, “Error handling coverage”, “Type safety” |
+| “Documentation quality” | “API completeness”, “Example accuracy”, “Terminology consistency” |
+| “Test coverage” | “Happy path coverage”, “Edge case coverage”, “Error path coverage” |
 
 #### Step 2: Misalignment Filtering
 
@@ -304,21 +497,21 @@ Remove criteria that would produce incorrect preference signals. A criterion is 
 - It rewards behaviors the prompt does not ask for
 - It penalizes acceptable variations
 - It correlates with superficial features (length, formatting) rather than substance
-- It evaluate whether the result honestly, precisely, and closely executes the instructions
-- It verify that results has no more or less than what the instruction asks for
-- It avoid any potential bias - judgment should be as objective as possible; superficial qualities like engaging tone, length, or formatting should not influence scoring
-- It do not reward hallucinated detail - extra information not grounded in the codebase or task requirements should be penalized, not rewarded
-- It penalize confident wrong results more than uncertain correct ones - a confidently stated incorrect result is worse than a hedged correct one
+- It does not evaluate whether the result honestly, precisely, and closely executes the instructions
+- It does not verify that results have no more or less than what the instruction asks for
+- It allows potential bias — judgment should be as objective as possible; superficial qualities like engaging tone, length, or formatting should not influence scoring
+- It rewards hallucinated detail — extra information not grounded in the codebase or task requirements should be penalized, not rewarded
+- It does not penalize confident wrong results more than uncertain correct ones
 
 #### Step 3: Redundancy Filtering
 
 Remove criteria that substantially overlap with existing ones. Two criteria are redundant if scoring one largely determines the score of the other.
 
-**Detection method**: For each pair of criteria, ask "Would a high score on criterion A almost always imply a high score on criterion B?" If yes, merge or remove one.
+**Detection method**: For each pair of criteria, ask “Would a high score on criterion A almost always imply a high score on criterion B?” If yes, merge or remove one.
 
 #### Step 4: Weight Optimization
 
-Assign weights following correlation-aware principles: When multiple rubrics measure overlapping aspects, they over-represent that perspective in the final score. For example, "code readability" and "naming conventions" are correlated — scoring both at full weight effectively double-counts readability. RRD addresses this by down-weighting correlated criteria.
+Assign weights following correlation-aware principles: When multiple rubrics measure overlapping aspects, they over-represent that perspective in the final score. For example, “code readability” and “naming conventions” are correlated — scoring both at full weight effectively double-counts readability. RRD addresses this by down-weighting correlated criteria.
 
 **Correlation-aware weighting process**:
 
@@ -340,37 +533,40 @@ The weight ranges depend on the total number of non-redundant criteria (N). Use 
 If a category has zero criteria, redistribute its weight proportionally to the remaining categories. Always verify weights sum to 1.0.
 
 **After initial assignment, apply correlation adjustment:**
-- For each pair of criteria, estimate correlation: "Would a high score on criterion A almost always imply a high score on criterion B?"
+- For each pair of criteria, estimate correlation: “Would a high score on criterion A almost always imply a high score on criterion B?”
 - If yes (correlation > 0.7): reduce both weights by 25% and redistribute to uncorrelated criteria
 - Re-normalize so weights sum to 1.0
 
-### STAGE 5: Final Assembly
+Write the post-RRD rubric and checklist to the **Final Rubric (post-RRD)** and **Final Checklist (post-RRD)** sections of the scratchpad.
 
-Assemble the complete evaluation specification:
+---
 
-1. Collect all rubric dimensions from Stage 2 (post-RRD refinement from Stage 4)
-2. Collect all checklist items from Stage 3
-3. Verify weights sum to 1.0
-4. Verify no two checklist items test the same thing
-5. Write the specification to the scratchpad // TODO: scratchpad should be used during each stage, not at the final. At final stage just return the specification to the orchestrator.
+### STAGE 7: Self-Verification (CRITICAL)
 
-### STAGE 6: Self-Verification (CRITICAL)
+Before returning the specification, write output to the **Self-Verification** section of the scratchpad:
 
-Before returning the specification:
-
-1. Generate exactly 5 verification questions about your specification. 
+1. Generate exactly 5 verification questions about your specification
 2. Answer each question honestly
-3. If the answer reveals a problem, revise your specification and update it accordingly
+3. If the answer reveals a problem, revise your specification in the scratchpad and update it accordingly
 
 **Verification question categories (generate one from each):**
 
 | # | Category | Example Question | Action if Failed |
 |---|----------|-----------------|------------------|
-| 1 | **Discriminative power** | "Would most reasonable implementations score similarly on this criterion, or does it actually distinguish good from mediocre work?" | Decompose broad criteria into finer sub-dimensions |
-| 2 | **Coverage completeness** | "Is there any explicit or implicit requirement from the prompt that is not captured by any rubric dimension or checklist item?" | Add missing dimensions or checklist items |
-| 3 | **Redundancy check** | "Would a high score on criterion A almost always imply a high score on criterion B? Are any criteria measuring the same underlying quality?" | Merge redundant criteria or remove one |
-| 4 | **Bias resistance** | "Are any criteria rewarding superficial features (length, formatting, confident tone) rather than substance? Could an implementation game a high score without truly meeting requirements?" | Remove or reframe criteria to focus on substance |
-| 5 | **Scoring clarity** | "Could two independent judges read the score definitions and reliably assign the same score to the same artifact? Are score boundaries clear and unambiguous?" | Rewrite vague score definitions with concrete, observable conditions |
+| 1 | **Discriminative power** | “Would most reasonable implementations score similarly on this criterion, or does it actually distinguish good from mediocre work?” | Decompose broad criteria into finer sub-dimensions |
+| 2 | **Coverage completeness** | “Is there any explicit or implicit requirement from the prompt that is not captured by any rubric dimension or checklist item?” | Add missing dimensions or checklist items |
+| 3 | **Redundancy check** | “Would a high score on criterion A almost always imply a high score on criterion B? Are any criteria measuring the same underlying quality?” | Merge redundant criteria or remove one |
+| 4 | **Bias resistance** | “Are any criteria rewarding superficial features (length, formatting, confident tone) rather than substance? Could an implementation game a high score without truly meeting requirements?” | Remove or reframe criteria to focus on substance |
+| 5 | **Scoring clarity** | “Could two independent judges read the score definitions and reliably assign the same score to the same artifact? Are score boundaries clear and unambiguous?” | Rewrite vague score definitions with concrete, observable conditions |
+
+After self-verification is complete, assemble the final evaluation specification:
+
+1. Collect all rubric dimensions (post-RRD from Stage 6)
+2. Collect all checklist items (post-RRD from Stage 6)
+3. Verify weights sum to 1.0
+4. Verify no two checklist items test the same thing
+5. Write the complete specification to the **Final Evaluation Specification** section of the scratchpad
+6. Return the specification to the orchestrator
 
 ---
 

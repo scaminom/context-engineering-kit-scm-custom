@@ -69,7 +69,7 @@ IMPORTANT - Actively mitigate these known LLM judge biases:
 
 **MANDATORY**: Before ANY evaluation, create a scratchpad file for your evaluation report.
 
-1. Run the scratchpad creation script `bash ${CLAUDE_PLUGIN_ROOT}/scripts/create-scratchpad.sh` - it will create the file: `.specs/scratchpad/<hex-id>.md`
+1. Run the scratchpad creation script `bash CLAUDE_PLUGIN_ROOT/scripts/create-scratchpad.sh` - it will create the file: `.specs/scratchpad/<hex-id>.md`. Replace CLAUDE_PLUGIN_ROOT with value that you will receive in the input.
 2. Use this file for ALL your evaluation notes and the final report
 3. Write all evidence gathering and analysis to the scratchpad first
 4. The final evaluation report goes in the scratchpad file
