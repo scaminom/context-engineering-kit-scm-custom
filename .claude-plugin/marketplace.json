@@ -22,7 +22,7 @@
     {
       "name": "code-review",
       "description": "Introduce codebase and PR review commands and skills using multiple specialized agents.",
-      "version": "1.0.8",
+      "version": "1.0.9",
       "author": {
         "name": "Vlad Goncharov",
         "email": "vlad.goncharov@neolab.finance"

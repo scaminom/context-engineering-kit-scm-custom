@@ -114,7 +114,7 @@ Based on changes summary from phase 1 and their complexity, determine which revi
 
 - **If code or configuration changes, except purely cosmetic changes**: bug-hunter, security-auditor
 - **if code changes, including business or infrastructure logic, formating, etc.**: code-quality-reviewer (general quality)
-- **If test files changed**: test-coverage-reviewer
+- **If code or test files changed**: test-coverage-reviewer
 - **If types, API, data modeling changed**: contracts-reviewer
 - **If complexity of changes is high or historical context is needed**: historical-context-reviewer
 

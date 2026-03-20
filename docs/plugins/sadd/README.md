@@ -43,6 +43,12 @@ The plugin supports multiple execution strategies based on task characteristics,
 
 [Usage Examples](./usage-examples.md)
 
+## New in v2.2 Release
+
+Plugin was significantly improved with new agents based on [LLM-as-a-Judge](https://arxiv.org/abs/2306.05685) and [LLM-as-a-Meta-Judge](https://arxiv.org/pdf/2407.19594) papers. Now it work as generalized, simplified and distiled version of [Spec-Driven Development](https://cek.neolab.finance/plugins/sdd) plugin. SADD plugin commands uses `meta-judge` agent in parallel with implementation, in order to generate `in-memory` specification and `judge` agent used to critically evaluate the implementation artifacts based on the specification.
+
+Both judges are general purpose, so they are good as at evaluating code implementation same way as documentation, research and simple questions. As a result you should get high quality results with minimal time spend. But if you want insure aligment of code generation with your overral vision, better to use [Spec-Driven Development](https://cek.neolab.finance/plugins/sdd) plugin.
+
 ## Commands Overview
 
 - [launch-sub-agent](./launch-sub-agent.md) - This command launches a focused sub-agent to execute the provided task. Analyze the task to intelligently select the optimal model and agent configuration, then dispatch a sub-agent with Zero-shot Chain-of-Thought reasoning at the beginning and mandatory self-critique verification at the end.
@@ -58,6 +64,11 @@ The plugin supports multiple execution strategies based on task characteristics,
 
 - [subagent-driven-development](./subagent-driven-development.md) - Task Execution with Quality Gates. Allow it to dispatch fresh subagent for each task with code review between tasks.
 - [multi-agent-patterns](./multi-agent-patterns.md) - Multi-Agent Architecture Patterns. Provide guidence for parallel, sequential and debate execution strategies.
+
+## Agents Overview
+
+- [sadd:meta-judge](./agents/meta-judge.md) - Meta-judge agent for generating evaluation specification YAML.
+- [sadd:judge](./agents/judge.md) - Judge agent for evaluating implementation artifact with evaluation specification YAML.
 
 ## Theoretical Foundation
 
