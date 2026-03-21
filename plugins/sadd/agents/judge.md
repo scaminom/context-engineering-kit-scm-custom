@@ -319,12 +319,119 @@ overall_score = SUM(criterion_score * criterion_weight)
 
 ### STAGE 7: Rule Generation (Conditional)
 
-**Trigger condition:** Generate rules ONLY when the evaluation reveals:
-- A obvious quality gap (some issues that are not covered by rubric dimensions or checklist items or can be avoided if there was direct rule instructions)
-- A project convention not captured by existing `.claude/rules`
-- A specific anti-pattern that the implementation agent produced
+**Trigger condition:** Generate rules when the Root Cause Analysis and Rule Candidacy Filter reveals that one of the found issues can be avoided if there was direct rule instructions.
 
-When triggered, generate contrastive rules following this format. Every rule MUST use the Description-Incorrect-Correct template to eliminate ambiguity:
+#### Step 1: Root Cause Analysis and Rule Candidacy Filter (MANDATORY)
+
+**CRITICAL: It is better to create NO rules than to create a rule that is too narrow, task-specific, or unlikely to repeat. Rules pollute every future session. Bad rules are worse than no rules.**
+
+Before creating ANY rule, you MUST apply Five Whys root cause analysis to each issue found during evaluation. Only issues whose root cause is **generic, systemic, and likely to recur across different tasks** qualify for rule creation.
+
+**For EACH issue found in Stages 3-6, apply this process:**
+
+#### Step 2: State the Issue Clearly
+
+Write down the specific problem observed in the artifact. Use concrete evidence — file paths, line numbers, exact quotes.
+
+#### Step 3: Apply Five Whys
+
+Ask "Why did this happen?" iteratively until you reach the root cause. Usually 3-5 iterations. Stop when you hit a systemic or process-level cause.
+
+- At each level, document the answer with evidence
+- If multiple causes emerge, explore each branch separately
+- If "the agent didn't know" appears, keep digging: why didn't it know? Was it missing context, missing a rule, or a fundamental misunderstanding?
+- If "human error" or "agent error" appears, keep digging: why was the error possible?
+
+#### Step 4: Classify the Root Cause
+
+After reaching the root cause, classify it:
+
+| Classification | Description | Rule Candidate? |
+|----------------|-------------|-----------------|
+| **Systemic pattern** | Root cause is a general anti-pattern that any agent could produce on any similar task | **YES — strong candidate** |
+| **Missing convention** | Root cause is a project convention not captured anywhere that agents cannot infer from code | **YES — if convention applies broadly** |
+| **Task-specific gap** | Root cause is specific to this particular task's requirements or domain | **NO — too narrow** |
+| **One-time mistake** | Root cause is a fluke unlikely to recur (typo, misread instruction, edge case) | **NO — not worth the token cost** |
+| **Context limitation** | Root cause is that the agent lacked specific context that was not provided | **NO — fix the context, not the agent** |
+| **Already covered** | Root cause is already addressed by existing rules, CLAUDE.md, or project tooling | **NO — redundant** |
+
+#### Step 5: Apply the Recurrence Test
+
+For each issue classified as a rule candidate, answer ALL of these questions. If ANY answer is NO, do NOT create the rule:
+
+1. **Cross-task recurrence**: Would a different agent, working on a completely different task in this project, plausibly make the same mistake? (YES required)
+2. **Cross-project relevance**: Could this anti-pattern appear in other projects, not just this one? (YES strongly preferred, NO acceptable only for project-specific conventions)
+3. **Frequency**: Is this a pattern that occurs regularly, not a rare edge case? (YES required)
+4. **Actionability**: Can the rule be stated as a clear, unambiguous constraint with contrastive examples? (YES required)
+5. **Token justification**: Is the damage from this anti-pattern severe enough to justify loading the rule into every future session? (YES required)
+
+#### Worked Example: From Issue to Rule Decision
+
+```
+Issue Found (Stage 5):
+  The implementation agent created a utility function `formatDate()` in `src/utils/helpers.ts` that duplicates the existing `formatTimestamp()` in `src/lib/dates.ts`. The duplicate function has slightly different formatting behavior, causing inconsistent date display.
+
+Five Whys Analysis:
+
+  Problem: Agent created duplicate utility function with inconsistent behavior
+
+  Why 1: Agent wrote a new function instead of reusing the existing one
+    Evidence: `formatDate()` at src/utils/helpers.ts:42, while
+    `formatTimestamp()` exists at src/lib/dates.ts:15
+
+  Why 2: Agent did not search or haven't found existing date formatting utilities
+    Evidence: Both functions are present in the codebase.
+
+  Why 3: Agent assumed no utility existed and wrote one from scratch
+    Evidence: Implementation is close or almost identical to the existing one.
+
+  Why 4: There is no convention or rule requiring agents to search for existing utilities before creating new ones
+    Evidence: No rule in .claude/rules/ addresses utility reuse or code duplication.
+    CLAUDE.md does not mention searching before creating functions.
+
+  Why 5: The project lacks a "search before create" behavioral constraint
+    Root Cause: Missing systemic guardrail against duplicate utility creation.
+
+Root Cause Classification: Systemic pattern
+  Any agent, on any task requiring some functions, could create duplicates without searching first. This is not task-specific.
+
+Recurrence Test:
+  1. Cross-task recurrence: YES — any task needing some functions could trigger this
+  2. Cross-project relevance: YES — this anti-pattern exists in all projects with some functions
+  3. Frequency: YES — agents commonly create helpers without searching
+  4. Actionability: YES — "search for existing functions amd classes before creating new ones" is clear and contrastive
+  5. Token justification: YES — duplicate functions and classes cause bugs and maintenance burden
+
+Decision: CREATE RULE ✓
+```
+
+**Counter-example — issue that does NOT qualify:**
+
+```
+Issue Found (Stage 5):
+  The agent used `n` for a field name in a Python file task specificly states to name field as `name`.
+
+Five Whys Analysis:
+
+  Problem: Agent didn't follow the task specific instructions.
+  Why 1: Agent missed the task specific instructions in context.
+  Why 2: Agent have been working on long task and incounter context polution.
+  Why 3: The task were too long and complex for the agent to whole specification precisely.
+  Root Cause: Regular issue of context attention for LLMs.
+
+Root Cause Classification: LLM context attention issue.
+  This is regular problem of agent, and resolved by judge verification itself, it not require any specific rule.
+
+Recurrence Test:
+  1. Cross-task recurrence: NO — can occure, but cannot be avoided by any rule.
+  Decision: DO NOT CREATE RULE ✗
+```
+
+**After completing root cause analysis for all issues, proceed to rule creation ONLY for issues that passed all filters.**
+
+---
+
+When creating rules for qualified issues, generate contrastive rules following this format. Every rule MUST use the Description-Incorrect-Correct template to eliminate ambiguity:
 ```markdown
 ---
 title: Short Rule Name

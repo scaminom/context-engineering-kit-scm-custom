@@ -11,15 +11,15 @@ Execute a complex task by decomposing it into sequential subtasks and orchestrat
 </task>
 
 <context>
-This command implements the **Supervisor/Orchestrator pattern** for sequential task execution with context passing and **meta-judge → LLM-as-a-judge verification**. You (the orchestrator) analyze a complex task, decompose it into ordered subtasks, dispatch a meta-judge ONCE to generate tailored evaluation criteria, then dispatch focused sub-agents for each step. Each sub-agent receives:
+This command implements the **Supervisor/Orchestrator pattern** for sequential task execution with context passing and **meta-judge → LLM-as-a-judge verification**. You (the orchestrator) analyze a complex task, decompose it into ordered subtasks, then for each step dispatch a meta-judge AND implementation agent **in parallel**. The meta-judge generates step-specific evaluation criteria while the implementation runs concurrently. Each sub-agent receives:
 - **Isolated context** - Clean context window for its specific subtask
 - **Optimal model** - Selected based on subtask complexity (Opus/Sonnet/Haiku)
 - **Previous step context** - Summary of relevant outputs from preceding steps
 - **Structured reasoning** - Zero-shot CoT prefix for systematic thinking
 - **Self-critique** - Internal verification before submission
-- **Structured evaluation** - Meta-judge produces tailored rubrics and checklists before any judging occurs
+- **Structured evaluation** - Meta-judge produces tailored rubrics and checklists per step before judging occurs
 - **External judge** - LLM-as-a-judge verification using meta-judge specification with iteration loop
-- **Parallel speed** - Meta-judge runs once upfront, then its specification is reused for all step judges
+- **Parallel speed** - Meta-judge and implementation agent run in parallel per step; meta-judge specification reused across retries within that step
 
 </context>
 
@@ -27,12 +27,11 @@ This command implements the **Supervisor/Orchestrator pattern** for sequential t
 
 1. Analyze and decompose the task
 2. Select optimal models and agents for each subtask
-3. **Dispatch meta-judge ONCE to generate evaluation specification**
-4. Dispatch sub-agents with proper prompts
-5. **Dispatch judge to verify step completion (using meta-judge specification)**
-6. **Iterate if judge fails the step (max 3 retries)**
-7. Collect outputs and pass context forward
-8. Report final results
+3. **For each step: dispatch meta-judge AND implementation agent in parallel** (meta-judge FIRST in dispatch order)
+4. **Wait for BOTH to complete, then dispatch judge with meta-judge's specification**
+5. **Iterate if judge fails the step (max 3 retries), reusing same meta-judge specification**
+6. Collect outputs and pass context forward
+7. Report final results
 
 ## RED FLAGS - Never Do These
 
@@ -50,13 +49,14 @@ This command implements the **Supervisor/Orchestrator pattern** for sequential t
 **ALWAYS:**
 
 - Use Task tool to dispatch sub-agents for ALL implementation work
-- Dispatch meta-judge ONCE before step execution begins
-- Pass meta-judge evaluation specification to ALL judge agents
+- Dispatch meta-judge AND implementation agent **in parallel per step** (meta-judge FIRST in dispatch order)
+- Wait for BOTH meta-judge and implementation to complete before dispatching judge
+- Pass step's meta-judge evaluation specification to the judge agent
 - Include `CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}` in prompts to meta-judge and judge agents
-- Reuse same meta-judge specification for all steps (never re-run meta-judge)
+- Reuse same meta-judge specification across retries within a step (never re-run meta-judge for retries)
+- Dispatch a NEW meta-judge for each new step (each step gets its own tailored specification)
 - Use Task tool to dispatch **independent judges** for step verification
 - Pass only necessary context summaries, not full file contents
-- Wait for each step to complete before starting verifictaion AND
 - Get pass from judge verification before proceeding to next step
 - Iterate with judge feedback if verification fails (max 3 retries)
 
@@ -238,73 +238,37 @@ Is this subtask CRITICAL (architecture, interface, breaking changes)?
 | 4 | Update tests | sonnet | sdd:tdd-developer | Test expertise |
 ```
 
-### Phase 2.5: Dispatch Meta-Judge
+### Phase 3: Sequential Execution with Parallel Meta-Judge and Judge Verification
 
-**CRITICAL**: Before executing ANY steps, dispatch a meta-judge agent ONCE to generate an evaluation specification. This specification will be reused for ALL step judge verifications.
-
-The meta-judge generates rubrics, checklists, and scoring criteria tailored to the overall task. It runs once and its output is shared across all judges.
-
-**Meta-Judge Prompt:**
-
-```markdown
-## Task
-
-Generate an evaluation specification yaml for the following task. You will produce rubrics, checklists, and scoring criteria that a judge agent will use to evaluate the implementation artifact.
-
-CLAUDE_PLUGIN_ROOT=`${CLAUDE_PLUGIN_ROOT}`
-
-## User Prompt
-{Original task description from user}
-
-## Context
-{Any relevant codebase context, file paths, constraints}
-
-## Artifact Type
-{code | documentation | configuration | etc.}
-
-## Instructions
-Return only the final evaluation specification YAML in your response.
-```
-
-**Dispatch:**
-
-```
-Use Task tool:
-  - description: "Meta-judge: {brief overall task summary}"
-  - prompt: {meta-judge prompt}
-  - model: opus
-  - subagent_type: "sadd:meta-judge"
-```
-
-Wait for the meta-judge to complete and extract the evaluation specification YAML before proceeding to Phase 3. The SAME specification is reused for ALL step judge verifications — never re-run meta-judge per step.
-
-### Phase 3: Sequential Execution with Judge Verification
-
-Execute subtasks one by one, verify each with an independent judge (using meta-judge specification), iterate if needed, then pass context forward.
+Execute subtasks one by one. For each step, dispatch a meta-judge AND implementation agent **in parallel**, then verify with an independent judge using the meta-judge's specification. Iterate if needed, then pass context forward.
 
 **Execution Flow per Step:**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Step N                                                                  │
-│                                                                         │
-│   ┌──────────────┐     ┌──────────────┐     ┌──────────────────────┐   │
-│   │ Implementer  │────▶│    Judge     │────▶│ Parse Verdict        │   │
-│   │ (Sub-agent)  │     │ (Sub-agent)  │     │ (Orchestrator)       │   │
-│   └──────────────┘     └──────────────┘     └──────────────────────┘   │
-│          ▲                                            │                 │
-│          │                                            ▼                 │
-│          │                              ┌─────────────────────────┐     │
-│          │                              │ PASS (≥4.0)?            │     │
-│          │                              │ ├─ YES → Next Step      │     │
-│          │                              │ ├─ ≥3.0 + low → PASS   │     │
-│          │                              │ └─ NO  → Retry?         │     │
-│          │                              │     ├─ <3 → Retry       │     │
-│          │                              │     └─ ≥3 → Escalate    │     │
-│          │                              └─────────────────────────┘     │
-│          │                                            │                 │
-│          └────────────── feedback ────────────────────┘                 │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Step N                                                                       │
+│                                                                              │
+│   ┌──────────────┐                                                           │
+│   │ Meta-Judge   │──┐ (parallel)                                             │
+│   │ (Sub-agent)  │  │                                                        │
+│   └──────────────┘  │   ┌──────────────┐     ┌──────────────────────┐       │
+│                      ├──▶│    Judge     │────▶│ Parse Verdict        │       │
+│   ┌──────────────┐  │   │ (Sub-agent)  │     │ (Orchestrator)       │       │
+│   │ Implementer  │──┘   └──────────────┘     └──────────────────────┘       │
+│   │ (Sub-agent)  │                                      │                    │
+│   └──────────────┘                                      ▼                    │
+│          ▲                              ┌─────────────────────────┐          │
+│          │                              │ PASS (≥4.0)?            │          │
+│          │                              │ ├─ YES → Next Step      │          │
+│          │                              │ ├─ ≥3.0 + low → PASS   │          │
+│          │                              │ └─ NO  → Retry?         │          │
+│          │                              │     ├─ <3 → Retry       │          │
+│          │                              │     └─ ≥3 → Escalate    │          │
+│          │                              └─────────────────────────┘          │
+│          │                                            │                      │
+│          └────────────── feedback ────────────────────┘                      │
+│          (retries reuse same meta-judge spec, no new meta-judge)             │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### 3.1 Context Passing Protocol
@@ -484,9 +448,62 @@ If ANY verification question reveals a gap:
 CRITICAL: Do not submit until ALL verification questions have satisfactory answers.
 ```
 
-#### 3.3 Judge Verification Protocol
+#### 3.3 Parallel Meta-Judge Dispatch
 
-After implementation agent completes, dispatch an **independent judge** to verify the step using the meta-judge evaluation specification.
+**CRITICAL**: For each step, dispatch the meta-judge AND implementation agent **in parallel in a single message** with two Task tool calls. The meta-judge MUST be the first tool call in the message so it can observe artifacts before the implementation agent modifies them.
+
+Both agents run as **foreground** agents. Wait for BOTH to complete before proceeding to judge dispatch.
+
+**Meta-Judge Prompt (per step):**
+
+```markdown
+## Task
+
+Generate an evaluation specification yaml for the following step. You will produce rubrics, checklists, and scoring criteria that a judge agent will use to evaluate the implementation artifact.
+
+CLAUDE_PLUGIN_ROOT=`${CLAUDE_PLUGIN_ROOT}`
+
+## User Prompt
+{Original task description from user}
+
+## Step Being Evaluated
+Step {N}/{total}: {subtask_name}
+{subtask_description}
+- Input: {what this step receives}
+- Expected output: {what this step should produce}
+
+## Previous Steps Context
+{Summary of what previous steps accomplished}
+
+## Artifact Type
+{code | documentation | configuration | etc.}
+
+## Instructions
+Return only the final evaluation specification YAML in your response.
+```
+
+**Dispatch Example**
+
+Send BOTH Task tool calls in a single message. Meta-judge first, implementation second:
+
+```
+Message with 2 tool calls:
+  Tool call 1 (meta-judge):
+    - description: "Meta-judge Step {N}/{total}: {subtask_name}"
+    - model: opus
+    - subagent_type: "sadd:meta-judge"
+
+  Tool call 2 (implementation):
+    - description: "Step {N}/{total}: {subtask_name}"
+    - model: {selected model}
+    - subagent_type: "{selected agent type}"
+```
+
+Wait for BOTH to return before proceeding to judge dispatch.
+
+#### 3.4 Judge Verification Protocol
+
+After BOTH meta-judge and implementation agent complete, dispatch an **independent judge** to verify the step using the meta-judge evaluation specification.
 
 CRITICAL: Provide to the judge EXACT meta-judge's evaluation specification YAML, do not skip or add anything, do not modify it in any way, do not shorten or summarize any text in it!
 
@@ -539,22 +556,31 @@ Use Task tool:
   - subagent_type: "sadd:judge"
 ```
 
-#### 3.4 Dispatch, Verify, and Iterate
+#### 3.5 Dispatch, Verify, and Iterate
 
 For each subtask in sequence:
 
 ```
-1. Dispatch implementation sub-agent:
-   Use Task tool:
-     - description: "Step {N}/{total}: {subtask_name}"
-     - prompt: {constructed prompt with CoT + task + previous context + self-critique}
-     - model: {selected model for this subtask}
+1. Dispatch meta-judge AND implementation agent IN PARALLEL (single message, 2 tool calls):
+   Tool call 1 (meta-judge — MUST be first):
+     Use Task tool:
+       - description: "Meta-judge Step {N}/{total}: {subtask_name}"
+       - prompt: {meta-judge prompt with step requirements and context}
+       - model: opus
+       - subagent_type: "sadd:meta-judge"
 
-2. Collect implementation output:
-   - Parse "Context for Next Steps" section from sub-agent response
-   - Note files modified and verification points
+   Tool call 2 (implementation):
+     Use Task tool:
+       - description: "Step {N}/{total}: {subtask_name}"
+       - prompt: {constructed prompt with CoT + task + previous context + self-critique}
+       - model: {selected model for this subtask}
+       - subagent_type: "{selected agent type}"
 
-3. Dispatch judge sub-agent (with meta-judge specification):
+2. Wait for BOTH to complete. Collect outputs:
+   - From meta-judge: Extract evaluation specification YAML
+   - From implementation: Parse "Context for Next Steps" section, note files modified
+
+3. Dispatch judge sub-agent (with this step's meta-judge specification):
    Use Task tool:
      - description: "Judge Step {N}/{total}: {subtask_name}"
      - prompt: {judge verification prompt with step requirements, implementation output, and meta-judge specification YAML}
@@ -590,13 +616,15 @@ For each subtask in sequence:
          - Judge's ISSUES list as feedback
          - Path to judge report for details
          - Instruction to fix specific issues
-       → Return to judge verification with same meta-judge specification
+       → Return to judge verification with SAME meta-judge specification from this step
+       → Do NOT re-run meta-judge for retries
 
      If retries ≥ 3:
        → Escalate to user (see Error Handling)
        → Do NOT proceed to next step
 
 6. Proceed to next subtask with accumulated context
+   → Next step gets a NEW meta-judge dispatched in parallel with its implementation agent
 ```
 
 **Retry prompt template for implementation agent:**
@@ -645,7 +673,7 @@ After all subtasks complete and pass verification, reply with a comprehensive re
 
 **Overall Task:** {original task description}
 **Total Steps:** {count}
-**Total Agents:** {meta_judge(1) + implementation_agents + judge_agents + retry_agents}
+**Total Agents:** {meta_judges(one per step) + implementation_agents + judge_agents + retry_agents}
 
 ### Step-by-Step Results
 
@@ -674,8 +702,8 @@ After all subtasks complete and pass verification, reply with a comprehensive re
 | 1 | {X.X} | {X.X} | {count or "None"} |
 | 2 | {X.X} | {X.X} | {count or "None"} |
 
-### Meta-Judge Specification
-Evaluation specification generated once and reused for all {count} step judges.
+### Meta-Judge Specifications
+One evaluation specification generated per step (in parallel with implementation), reused across retries within each step.
 
 
 ### Follow-up Recommendations
@@ -692,7 +720,7 @@ The judge-verified iteration loop handles most failures automatically:
 Judge FAIL (Retry Available):
   1. Parse ISSUES from judge verdict
   2. Dispatch retry implementation agent with feedback
-  3. Re-verify with judge (using same meta-judge specification)
+  3. Re-verify with judge (using same step's meta-judge specification — do NOT re-run meta-judge)
   4. Repeat until PASS or max retries (3)
 ```
 
@@ -799,58 +827,61 @@ Awaiting your decision...
 | 3 | Update Controller | sonnet | sdd:developer | Medium complexity, follows patterns |
 | 4 | Update Tests | sonnet | sdd:tdd-developer | Test expertise |
 
-**Phase 2.5 - Dispatch Meta-Judge:**
-
-```
-Meta-judge (Opus, sadd:meta-judge)...
-  → Generated evaluation specification YAML
-  → Rubrics for DTO pattern, service integration, consumer updates, test coverage
-  → This specification will be reused for ALL 4 step judges
-```
-
-**Phase 3 - Execution with Judge Verification:**
+**Phase 3 - Execution with Parallel Meta-Judge and Judge Verification:**
 
 ```
 Step 1: Create UserDTO
-  Implementation (Sonnet)...
-    -> Created UserDTO.ts with id, name, email, createdAt fields
-  Judge Verification (Opus, sadd:judge, with meta-judge spec)...
-    -> VERDICT: PASS, SCORE: 4.2/5.0
-    -> IMPROVEMENTS: Consider adding validation methods
-  -> Context passed: UserDTO interface, file path
+  Parallel dispatch (single message, 2 tool calls):
+    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
+      → Generated step-specific evaluation specification YAML
+    Tool call 2 — Implementation (Sonnet, sdd:developer)...
+      → Created UserDTO.ts with id, name, email, createdAt fields
+  Judge Verification (Opus, sadd:judge, with step 1 meta-judge spec)...
+    → VERDICT: PASS, SCORE: 4.2/5.0
+    → IMPROVEMENTS: Consider adding validation methods
+  → Context passed: UserDTO interface, file path
 
 Step 2: Update UserService (First Attempt Failed)
-  Implementation (Opus)...
-    -> Updated return type but missed mapping logic
-  Judge Verification (Opus, sadd:judge, with meta-judge spec)...
-    -> VERDICT: FAIL, SCORE: 2.8/5.0
-    -> ISSUES: Missing User->UserDTO mapping, return type changed but still returns User
+  Parallel dispatch (single message, 2 tool calls):
+    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
+      → Generated step-specific evaluation specification YAML
+    Tool call 2 — Implementation (Opus, sdd:developer)...
+      → Updated return type but missed mapping logic
+  Judge Verification (Opus, sadd:judge, with step 2 meta-judge spec)...
+    → VERDICT: FAIL, SCORE: 2.8/5.0
+    → ISSUES: Missing User->UserDTO mapping, return type changed but still returns User
   Retry Implementation (Opus) with judge feedback...
-    -> Added static fromUser() factory method
-    -> Updated getUser() to use mapping
-  Judge Verification (Opus, sadd:judge, same meta-judge spec)...
-    -> VERDICT: PASS, SCORE: 4.5/5.0
-  -> Context passed: Method signature changed, mapping pattern used
+    → Added static fromUser() factory method
+    → Updated getUser() to use mapping
+  Judge Verification (Opus, sadd:judge, same step 2 meta-judge spec)...
+    → VERDICT: PASS, SCORE: 4.5/5.0
+  → Context passed: Method signature changed, mapping pattern used
 
 Step 3: Update UserController
-  Implementation (Sonnet)...
-    -> Updated controller to expect UserDTO
-  Judge Verification (Opus, sadd:judge, with meta-judge spec)...
-    -> VERDICT: PASS, SCORE: 4.0/5.0
-  -> Context passed: Endpoint contracts updated
+  Parallel dispatch (single message, 2 tool calls):
+    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
+      → Generated step-specific evaluation specification YAML
+    Tool call 2 — Implementation (Sonnet, sdd:developer)...
+      → Updated controller to expect UserDTO
+  Judge Verification (Opus, sadd:judge, with step 3 meta-judge spec)...
+    → VERDICT: PASS, SCORE: 4.0/5.0
+  → Context passed: Endpoint contracts updated
 
 Step 4: Update Tests
-  Implementation (Sonnet + sdd:tdd-developer)...
-    -> Updated service and controller tests
-  Judge Verification (Opus, sadd:judge, with meta-judge spec)...
-    -> VERDICT: PASS, SCORE: 4.3/5.0
-  -> All steps complete
+  Parallel dispatch (single message, 2 tool calls):
+    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
+      → Generated step-specific evaluation specification YAML
+    Tool call 2 — Implementation (Sonnet, sdd:tdd-developer)...
+      → Updated service and controller tests
+  Judge Verification (Opus, sadd:judge, with step 4 meta-judge spec)...
+    → VERDICT: PASS, SCORE: 4.3/5.0
+  → All steps complete
 ```
 
 **Final Summary:**
 
-- Total Agents: 10 (1 meta-judge + 4 implementations + 1 retry + 4 judges)
-- Steps with Retries: Step 2 (1 retry)
+- Total Agents: 13 (4 meta-judges + 4 implementations + 1 retry + 4 judges)
+- Steps with Retries: Step 2 (1 retry, reused step 2 meta-judge spec)
 - All Judge Scores: 4.2, 4.5, 4.0, 4.3
 
 ---
@@ -883,26 +914,17 @@ Step 4: Update Tests
 | 4 | Configuration | haiku | Mechanical updates |
 | 5 | Integration tests | sonnet | Test expertise |
 
-**Phase 2.5 - Dispatch Meta-Judge:**
+**Phase 3 - Execution Summary (each step has parallel meta-judge + implementation):**
 
-```
-Meta-judge (Opus, sadd:meta-judge)...
-  → Generated evaluation specification YAML
-  → Rubrics for service design, integration, templates, config, tests
-  → Specification reused for all 5 step judges
-```
+| Step | Subtask | Meta-Judge | Judge Score | Retries | Status |
+|------|---------|------------|-------------|---------|--------|
+| 1 | EmailService | Step-specific spec | 4.1/5.0 | 0 | PASS |
+| 2 | Notification triggers | Step-specific spec | 4.2/5.0 | 1 | PASS |
+| 3 | Email templates | Step-specific spec | 4.5/5.0 | 0 | PASS |
+| 4 | Configuration | Step-specific spec | 4.2/5.0 | 0 | PASS |
+| 5 | Integration tests | Step-specific spec | 4.0/5.0 | 0 | PASS |
 
-**Phase 3 - Execution Summary:**
-
-| Step | Subtask | Judge Score | Retries | Status |
-|------|---------|-------------|---------|--------|
-| 1 | EmailService | 4.1/5.0 | 0 | PASS |
-| 2 | Notification triggers | 4.2/5.0 | 1 | PASS |
-| 3 | Email templates | 4.5/5.0 | 0 | PASS |
-| 4 | Configuration | 4.2/5.0 | 0 | PASS |
-| 5 | Integration tests | 4.0/5.0 | 0 | PASS |
-
-Total Agents: 12 (1 meta-judge + 5 implementations + 1 retry + 5 judges)
+Total Agents: 16 (5 meta-judges + 5 implementations + 1 retry + 5 judges)
 
 ---
 
@@ -934,32 +956,27 @@ Total Agents: 12 (1 meta-judge + 5 implementations + 1 retry + 5 judges)
 | 4 | Update tests | haiku | Mechanical test fixes |
 | 5 | Update documentation | haiku | Simple text updates |
 
-**Phase 2.5 - Dispatch Meta-Judge:**
-
-```
-Meta-judge (Opus, sadd:meta-judge)...
-  → Generated evaluation specification YAML for rename refactoring
-  → Specification reused for all 5 step judges
-```
-
-**Phase 3 - Execution with Escalation:**
+**Phase 3 - Execution with Escalation (each step has parallel meta-judge + implementation):**
 
 ```
 Step 1: Update interfaces
-  -> Judge (Opus, sadd:judge, with meta-judge spec): PASS, 4.3/5.0
+  Parallel dispatch: Meta-judge + Implementation
+  → Judge (Opus, sadd:judge, with step 1 meta-judge spec): PASS, 4.3/5.0
 
 Step 2: Update implementations
-  -> Judge (Opus, sadd:judge, with meta-judge spec): PASS, 4.0/5.0
+  Parallel dispatch: Meta-judge + Implementation
+  → Judge (Opus, sadd:judge, with step 2 meta-judge spec): PASS, 4.0/5.0
 
 Step 3: Update callers (Problem Detected)
-  Attempt 1: Judge FAIL, 2.5/5.0
-    -> ISSUES: Missed 12 occurrences in legacy module
-  Attempt 2: Judge FAIL, 2.8/5.0
-    -> ISSUES: Still missing 4 occurrences, found new deprecated API usage
-  Attempt 3: Judge FAIL, 3.2/5.0
-    -> ISSUES: 2 occurrences in dynamically generated code
-  Attempt 4: Judge FAIL, 3.3/5.0
-    -> ISSUES: Dynamic code generation still not fully addressed
+  Parallel dispatch: Meta-judge + Implementation
+  Attempt 1: Judge FAIL, 2.5/5.0 (using step 3 meta-judge spec)
+    → ISSUES: Missed 12 occurrences in legacy module
+  Attempt 2: Judge FAIL, 2.8/5.0 (reusing same step 3 meta-judge spec)
+    → ISSUES: Still missing 4 occurrences, found new deprecated API usage
+  Attempt 3: Judge FAIL, 3.2/5.0 (reusing same step 3 meta-judge spec)
+    → ISSUES: 2 occurrences in dynamically generated code
+  Attempt 4: Judge FAIL, 3.3/5.0 (reusing same step 3 meta-judge spec)
+    → ISSUES: Dynamic code generation still not fully addressed
 
   ESCALATION TO USER:
   "Step 3 failed after 4 attempts. Persistent issue: Dynamic code generation
@@ -968,12 +985,12 @@ Step 3: Update callers (Problem Detected)
 
   User response: "Update LegacyAdapter to use string template with accountId"
 
-  Attempt 5 (with user guidance): Judge PASS, 4.1/5.0
+  Attempt 5 (with user guidance, reusing same step 3 meta-judge spec): Judge PASS, 4.1/5.0
 
-Step 4-5: Complete without issues
+Step 4-5: Each with parallel meta-judge + implementation, complete without issues
 ```
 
-Total Agents: 16 (1 meta-judge + 5 implementations + 5 retries + 5 judges)
+Total Agents: 20 (5 meta-judges + 5 implementations + 5 retries + 5 judges)
 
 ## Best Practices
 
@@ -1018,7 +1035,10 @@ Total Agents: 16 (1 meta-judge + 5 implementations + 5 retries + 5 judges)
 ### Meta-Judge + Judge Verification
 
 - **Never skip meta-judge** - Tailored evaluation criteria produce better judgments than generic ones
-- **Reuse meta-judge spec across all steps** - The evaluation specification stays constant; only the implementation changes
+- **One meta-judge per step** - Each step gets its own meta-judge dispatched in parallel with implementation
+- **Reuse meta-judge spec across retries within a step** - On retry, reuse the same step's meta-judge specification; do NOT re-run meta-judge
+- **New meta-judge for each new step** - Different steps have different requirements, so each gets a fresh meta-judge
+- **Meta-judge FIRST in parallel dispatch** - Always the first tool call in the message
 - **Parse only headers from judge** - Don't read full reports to avoid context pollution
 - **Include CLAUDE_PLUGIN_ROOT** - Both meta-judge and judge need the resolved plugin root path
 - **Meta-judge YAML** - Pass only the meta-judge YAML to the judge, do not add any additional text or comments to it!
@@ -1027,7 +1047,7 @@ Total Agents: 16 (1 meta-judge + 5 implementations + 5 retries + 5 judges)
 - **Structured output:** Always parse VERDICT/SCORE from reply, not full report
 - **Max retries:** 3 attempts before escalating to user
 - **Feedback loop:** Pass judge ISSUES to retry implementation agent
-- **Return to judge verification with same meta-judge specification** on retry
+- **Return to judge verification with same step's meta-judge specification** on retry
 
 ### Quality Assurance
 
@@ -1102,4 +1122,4 @@ IMPROVEMENTS:
 ---
 ```
 
-**Key Insight:** Complex tasks with dependencies benefit from sequential execution where each step operates in a fresh context while receiving only the relevant outputs from previous steps. **Meta-judge evaluation specification** ensures consistent, tailored evaluation criteria across all steps. **External judge verification** catches blind spots that self-critique misses, while the **iteration loop** ensures quality before proceeding. This prevents both context pollution and error propagation.
+**Key Insight:** Complex tasks with dependencies benefit from sequential execution where each step operates in a fresh context while receiving only the relevant outputs from previous steps. **Per-step meta-judge evaluation specifications** ensure tailored evaluation criteria specific to each step's requirements, while running in parallel with implementation for speed. **External judge verification** catches blind spots that self-critique misses, while the **iteration loop** (reusing the same step's meta-judge spec) ensures quality before proceeding. This prevents both context pollution and error propagation.
