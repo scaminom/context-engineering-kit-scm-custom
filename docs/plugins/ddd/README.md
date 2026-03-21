@@ -41,12 +41,12 @@ See [setup-code-formating.md](./setup-code-formating.md) for detailed command do
 
 ## Rules
 
-The DDD plugin includes 15 rules organized into four categories that activate automatically when writing or reviewing code. Each rule targets specific file patterns and has an assigned impact level.
+The DDD plugin includes 14 rules organized into four categories that activate automatically when writing or reviewing code. Each rule targets specific file patterns and has an assigned impact level.
 
 | Category | Rules |
 |----------|-------|
 | **Architecture** | Clean Architecture & DDD, Separation of Concerns, Functional Core / Imperative Shell |
-| **Function Design** | Command-Query Separation, Honest Functions, Principle of Least Astonishment, Call-Site Honesty |
+| **Function Design** | Command-Query Separation, Principle of Least Astonishment, Call-Site Honesty |
 | **Explicitness** | Explicit Control Flow, Explicit Data Flow, Explicit Side Effects |
 | **Code Quality** | Error Handling, Domain-Specific Naming, Library-First Approach, Early Return Pattern, Function & File Size Limits |
 
@@ -72,4 +72,5 @@ The DDD plugin is based on foundational software engineering literature that has
 | Single Responsibility | Martin (SOLID) | Function and file size limits |
 | Separation of Concerns | General | Business logic isolation |
 | Command-Query Separation | Meyer (OOSC) | Function design rules |
+| Functional Core, Imperative Shell | Bernhardt | Pure logic with side effects at edges |
 | Principle of Least Astonishment | General | Function behavior predictability |

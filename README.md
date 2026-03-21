@@ -355,9 +355,9 @@ Commands for setting up domain-driven development best practices focused on code
 
 - [/ddd:setup-code-formatting](https://cek.neolab.finance/plugins/ddd/setup-code-formating) - Sets up code formatting rules and style guidelines in CLAUDE.md
 
-**Skills**
+**Rules**
 
-- **software-architecture** - Includes Clean Architecture, SOLID principles, and other design patterns
+- 15 composable rules covering Clean Architecture, SOLID principles, Command-Query Separation, Functional Core/Imperative Shell, Explicit Control Flow, Domain-Specific Naming, and more. See [rules reference](https://cek.neolab.finance/plugins/ddd/rules)
 
 ### [FPF - First Principles Framework](https://cek.neolab.finance/plugins/fpf)
 

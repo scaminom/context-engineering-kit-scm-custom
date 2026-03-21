@@ -1,6 +1,6 @@
 # Rules Reference
 
-The DDD plugin enforces code quality through 15 rules that activate automatically when writing or reviewing code. Each rule targets specific files via glob patterns and has an assigned impact level.
+The DDD plugin enforces code quality through 14 rules that activate automatically when writing or reviewing code. Each rule targets specific files via glob patterns and has an assigned impact level.
 
 Rules replace the previous monolithic `software-architecture` skill with focused, composable guidelines that Claude applies contextually based on the files being edited.
 
@@ -12,7 +12,6 @@ Rules replace the previous monolithic `software-architecture` skill with focused
 | [Separation of Concerns](#separation-of-concerns) | HIGH | `src/**/*` | Enforce boundaries between layers |
 | [Functional Core, Imperative Shell](#functional-core-imperative-shell) | HIGH | `src/**/*` | Pure business logic, side effects at the edges |
 | [Command-Query Separation](#command-query-separation) | HIGH | `src/**/*` | Functions either return or mutate, never both |
-| [Honest Functions](#honest-functions) | HIGH | `src/**/*` | Signatures must reflect all outcomes |
 | [Explicit Control Flow](#explicit-control-flow) | HIGH | `src/**/*` | Control flow decisions visible at call site |
 | [Explicit Data Flow](#explicit-data-flow) | HIGH | `src/**/*` | Return values over input mutation |
 | [Explicit Side Effects](#explicit-side-effects) | HIGH | `src/**/*` | Side effects visible where triggered |
@@ -64,10 +63,6 @@ Keep business logic in pure functions; push all side effects to an outer imperat
 ### Command-Query Separation
 
 Functions must either return a value (query) or cause a side effect (command), never both. Mutations hidden by assignments are anti-patterns.
-
-### Honest Functions
-
-Function type signatures must tell the complete story: what it accepts, what it returns, and what can go wrong. Use discriminated unions or Result types to encode all possible outcomes. Reserve exceptions for truly exceptional situations.
 
 ### Principle of Least Astonishment
 
