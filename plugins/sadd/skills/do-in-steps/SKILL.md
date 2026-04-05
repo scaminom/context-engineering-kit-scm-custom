@@ -513,7 +513,7 @@ Before dispatching the judge for each step, assess whether there are pre-existin
 
 **When to include:**
 
-- Previous steps' changes from the SAME do-in-steps run (steps 1..N-1 when judging step N) — this is the most common case in sequential execution
+- Previous steps' changes from the SAME do-in-steps run (steps 1..N-1 when judging step N) — this is the most common case in sequential execution. When running step N, the judge MUST know about changes from steps 1..N-1 as pre-existing. Each completed step's output (files created/modified, key changes) becomes pre-existing context for subsequent step judges. 
 - Previous do-in-steps or do-and-judge task runs completed earlier in the same session
 - User's manual modifications made before invoking the skill (visible from conversation context or in git)
 - Changes from other tools or agents that ran before this task
@@ -522,8 +522,6 @@ Before dispatching the judge for each step, assess whether there are pre-existin
 
 - This is step 1 with no known prior changes (no earlier session tasks, no user modifications) — omit the section entirely
 - On retries within the SAME step, do NOT include the implementation agent's own previous attempt as "pre-existing changes" — those are part of the current step's iteration cycle
-
-**CRITICAL for do-in-steps:** When running step N, the judge MUST know about changes from steps 1..N-1 as pre-existing. Each completed step's output (files created/modified, key changes) becomes pre-existing context for subsequent step judges. This is the key difference from do-and-judge where there is only one implementation step.
 
 **Content guidelines:**
 
@@ -843,200 +841,7 @@ Awaiting your decision...
 
 ## Examples
 
-### Example 1: Interface Change with Consumer Updates
-
-**Input:**
-
-```
-/do-in-steps Change the return type of UserService.getUser() from User to UserDTO and update all consumers
-```
-
-**Phase 1 - Decomposition:**
-
-| Step | Subtask | Depends On | Complexity | Type | Output |
-|------|---------|------------|------------|------|--------|
-| 1 | Create UserDTO class with proper structure | - | Medium | Implementation | New UserDTO.ts file |
-| 2 | Update UserService.getUser() to return UserDTO | Step 1 | High | Implementation | Modified UserService |
-| 3 | Update UserController to handle UserDTO | Step 2 | Medium | Refactoring | Modified UserController |
-| 4 | Update tests for UserService and UserController | Steps 2,3 | Medium | Testing | Updated test files |
-
-**Phase 2 - Model Selection:**
-
-| Step | Subtask | Model | Agent | Rationale |
-|------|---------|-------|-------|-----------|
-| 1 | Create DTO | sonnet | sdd:developer | Medium complexity, standard pattern |
-| 2 | Update Service | opus | sdd:developer | High risk, core service change |
-| 3 | Update Controller | sonnet | sdd:developer | Medium complexity, follows patterns |
-| 4 | Update Tests | sonnet | sdd:tdd-developer | Test expertise |
-
-**Phase 3 - Execution with Parallel Meta-Judge and Judge Verification:**
-
-```
-Step 1: Create UserDTO
-  Parallel dispatch (single message, 2 tool calls):
-    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
-      → Generated step-specific evaluation specification YAML
-    Tool call 2 — Implementation (Sonnet, sdd:developer)...
-      → Created UserDTO.ts with id, name, email, createdAt fields
-  Judge Verification (Opus, sadd:judge, with step 1 meta-judge spec)...
-    → VERDICT: PASS, SCORE: 4.2/5.0
-    → IMPROVEMENTS: Consider adding validation methods
-  → Context passed: UserDTO interface, file path
-
-Step 2: Update UserService (First Attempt Failed)
-  Parallel dispatch (single message, 2 tool calls):
-    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
-      → Generated step-specific evaluation specification YAML
-    Tool call 2 — Implementation (Opus, sdd:developer)...
-      → Updated return type but missed mapping logic
-  Judge Verification (Opus, sadd:judge, with step 2 meta-judge spec)...
-    → VERDICT: FAIL, SCORE: 2.8/5.0
-    → ISSUES: Missing User->UserDTO mapping, return type changed but still returns User
-  Retry Implementation (Opus) with judge feedback...
-    → Added static fromUser() factory method
-    → Updated getUser() to use mapping
-  Judge Verification (Opus, sadd:judge, same step 2 meta-judge spec)...
-    → VERDICT: PASS, SCORE: 4.5/5.0
-  → Context passed: Method signature changed, mapping pattern used
-
-Step 3: Update UserController
-  Parallel dispatch (single message, 2 tool calls):
-    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
-      → Generated step-specific evaluation specification YAML
-    Tool call 2 — Implementation (Sonnet, sdd:developer)...
-      → Updated controller to expect UserDTO
-  Judge Verification (Opus, sadd:judge, with step 3 meta-judge spec)...
-    → VERDICT: PASS, SCORE: 4.0/5.0
-  → Context passed: Endpoint contracts updated
-
-Step 4: Update Tests
-  Parallel dispatch (single message, 2 tool calls):
-    Tool call 1 — Meta-judge (Opus, sadd:meta-judge)...
-      → Generated step-specific evaluation specification YAML
-    Tool call 2 — Implementation (Sonnet, sdd:tdd-developer)...
-      → Updated service and controller tests
-  Judge Verification (Opus, sadd:judge, with step 4 meta-judge spec)...
-    → VERDICT: PASS, SCORE: 4.3/5.0
-  → All steps complete
-```
-
-**Final Summary:**
-
-- Total Agents: 13 (4 meta-judges + 4 implementations + 1 retry + 4 judges)
-- Steps with Retries: Step 2 (1 retry, reused step 2 meta-judge spec)
-- All Judge Scores: 4.2, 4.5, 4.0, 4.3
-
----
-
-### Example 2: Feature Addition Across Layers
-
-**Input:**
-
-```
-/do-in-steps Add email notification capability to the order processing system
-```
-
-**Phase 1 - Decomposition:**
-
-| Step | Subtask | Depends On | Complexity | Type | Output |
-|------|---------|------------|------------|------|--------|
-| 1 | Create EmailService with send capability | - | Medium | Implementation | New EmailService class |
-| 2 | Add notification triggers to OrderService | Step 1 | Medium | Implementation | Modified OrderService |
-| 3 | Create email templates for order events | Step 2 | Low | Documentation | Template files |
-| 4 | Add configuration and environment variables | Step 1 | Low | Configuration | Updated config files |
-| 5 | Add integration tests for email flow | Steps 1-4 | Medium | Testing | Test files |
-
-**Phase 2 - Model Selection:**
-
-| Step | Subtask | Model | Rationale |
-|------|---------|-------|-----------|
-| 1 | EmailService | sonnet | Standard implementation |
-| 2 | Notification triggers | sonnet | Business logic |
-| 3 | Email templates | haiku | Simple content |
-| 4 | Configuration | haiku | Mechanical updates |
-| 5 | Integration tests | sonnet | Test expertise |
-
-**Phase 3 - Execution Summary (each step has parallel meta-judge + implementation):**
-
-| Step | Subtask | Meta-Judge | Judge Score | Retries | Status |
-|------|---------|------------|-------------|---------|--------|
-| 1 | EmailService | Step-specific spec | 4.1/5.0 | 0 | PASS |
-| 2 | Notification triggers | Step-specific spec | 4.2/5.0 | 1 | PASS |
-| 3 | Email templates | Step-specific spec | 4.5/5.0 | 0 | PASS |
-| 4 | Configuration | Step-specific spec | 4.2/5.0 | 0 | PASS |
-| 5 | Integration tests | Step-specific spec | 4.0/5.0 | 0 | PASS |
-
-Total Agents: 16 (5 meta-judges + 5 implementations + 1 retry + 5 judges)
-
----
-
-### Example 3: Multi-file Refactoring with Escalation
-
-**Input:**
-
-```
-/do-in-steps Rename 'userId' to 'accountId' across the codebase - this affects interfaces, implementations, and callers
-```
-
-**Phase 1 - Decomposition:**
-
-| Step | Subtask | Depends On | Complexity | Type | Output |
-|------|---------|------------|------------|------|--------|
-| 1 | Update interface definitions | - | High | Refactoring | Updated interfaces |
-| 2 | Update implementations of those interfaces | Step 1 | Low | Refactoring | Updated implementations |
-| 3 | Update callers and consumers | Step 2 | Low | Refactoring | Updated caller files |
-| 4 | Update tests | Step 3 | Low | Testing | Updated test files |
-| 5 | Update documentation | Step 4 | Low | Documentation | Updated docs |
-
-**Phase 2 - Model Selection:**
-
-| Step | Subtask | Model | Rationale |
-|------|---------|-------|-----------|
-| 1 | Update interfaces | opus | Breaking changes need careful handling |
-| 2 | Update implementations | haiku | Mechanical rename |
-| 3 | Update callers | haiku | Mechanical updates |
-| 4 | Update tests | haiku | Mechanical test fixes |
-| 5 | Update documentation | haiku | Simple text updates |
-
-**Phase 3 - Execution with Escalation (each step has parallel meta-judge + implementation):**
-
-```
-Step 1: Update interfaces
-  Parallel dispatch: Meta-judge + Implementation
-  → Judge (Opus, sadd:judge, with step 1 meta-judge spec): PASS, 4.3/5.0
-
-Step 2: Update implementations
-  Parallel dispatch: Meta-judge + Implementation
-  → Judge (Opus, sadd:judge, with step 2 meta-judge spec): PASS, 4.0/5.0
-
-Step 3: Update callers (Problem Detected)
-  Parallel dispatch: Meta-judge + Implementation
-  Attempt 1: Judge FAIL, 2.5/5.0 (using step 3 meta-judge spec)
-    → ISSUES: Missed 12 occurrences in legacy module
-  Attempt 2: Judge FAIL, 2.8/5.0 (reusing same step 3 meta-judge spec)
-    → ISSUES: Still missing 4 occurrences, found new deprecated API usage
-  Attempt 3: Judge FAIL, 3.2/5.0 (reusing same step 3 meta-judge spec)
-    → ISSUES: 2 occurrences in dynamically generated code
-  Attempt 4: Judge FAIL, 3.3/5.0 (reusing same step 3 meta-judge spec)
-    → ISSUES: Dynamic code generation still not fully addressed
-
-  ESCALATION TO USER:
-  "Step 3 failed after 4 attempts. Persistent issue: Dynamic code generation
-   in LegacyAdapter.ts generates 'userId' at runtime.
-   Options: 1) Provide guidance, 2) Modify requirements, 3) Skip, 4) Abort"
-
-  User response: "Update LegacyAdapter to use string template with accountId"
-
-  Attempt 5 (with user guidance, reusing same step 3 meta-judge spec): Judge PASS, 4.1/5.0
-
-Step 4-5: Each with parallel meta-judge + implementation, complete without issues
-```
-
-Total Agents: 20 (5 meta-judges + 5 implementations + 5 retries + 5 judges)
-
----
-
-### Example 4: Sequential Steps Building on Each Other (Pre-existing Changes from Previous Steps)
+### Example 1: Sequential Steps Building on Each Other (Pre-existing Changes from Previous Steps)
 
 **Input:**
 
@@ -1238,7 +1043,7 @@ Step 3: Add authentication integration
 
 ---
 
-### Example 5: User-Modified Codebase + Sequential Steps (Mixed Pre-existing Changes Sources)
+### Example 2: User-Modified Codebase + Sequential Steps (Mixed Pre-existing Changes Sources)
 
 **Scenario:**
 
@@ -1408,6 +1213,74 @@ Step 2: Add retry logic for failed payments
   - Step 1 judge: User modifications (3 files)
   - Step 2 judge: User modifications (3 files) + Step 1 output (2 files)
 - All Judge Scores: 4.3, 4.5
+
+---
+
+### Example 3: Multi-file Refactoring with Escalation
+
+**Input:**
+
+```
+/do-in-steps Rename 'userId' to 'accountId' across the codebase - this affects interfaces, implementations, and callers
+```
+
+**Phase 1 - Decomposition:**
+
+| Step | Subtask | Depends On | Complexity | Type | Output |
+|------|---------|------------|------------|------|--------|
+| 1 | Update interface definitions | - | High | Refactoring | Updated interfaces |
+| 2 | Update implementations of those interfaces | Step 1 | Low | Refactoring | Updated implementations |
+| 3 | Update callers and consumers | Step 2 | Low | Refactoring | Updated caller files |
+| 4 | Update tests | Step 3 | Low | Testing | Updated test files |
+| 5 | Update documentation | Step 4 | Low | Documentation | Updated docs |
+
+**Phase 2 - Model Selection:**
+
+| Step | Subtask | Model | Rationale |
+|------|---------|-------|-----------|
+| 1 | Update interfaces | opus | Breaking changes need careful handling |
+| 2 | Update implementations | haiku | Mechanical rename |
+| 3 | Update callers | haiku | Mechanical updates |
+| 4 | Update tests | haiku | Mechanical test fixes |
+| 5 | Update documentation | haiku | Simple text updates |
+
+**Phase 3 - Execution with Escalation (each step has parallel meta-judge + implementation):**
+
+```
+Step 1: Update interfaces
+  Parallel dispatch: Meta-judge + Implementation
+  → Judge (Opus, sadd:judge, with step 1 meta-judge spec): PASS, 4.3/5.0
+
+Step 2: Update implementations
+  Parallel dispatch: Meta-judge + Implementation
+  → Judge (Opus, sadd:judge, with step 2 meta-judge spec): PASS, 4.0/5.0
+
+Step 3: Update callers (Problem Detected)
+  Parallel dispatch: Meta-judge + Implementation
+  Attempt 1: Judge FAIL, 2.5/5.0 (using step 3 meta-judge spec)
+    → ISSUES: Missed 12 occurrences in legacy module
+  Attempt 2: Judge FAIL, 2.8/5.0 (reusing same step 3 meta-judge spec)
+    → ISSUES: Still missing 4 occurrences, found new deprecated API usage
+  Attempt 3: Judge FAIL, 3.2/5.0 (reusing same step 3 meta-judge spec)
+    → ISSUES: 2 occurrences in dynamically generated code
+  Attempt 4: Judge FAIL, 3.3/5.0 (reusing same step 3 meta-judge spec)
+    → ISSUES: Dynamic code generation still not fully addressed
+
+  ESCALATION TO USER:
+  "Step 3 failed after 4 attempts. Persistent issue: Dynamic code generation
+   in LegacyAdapter.ts generates 'userId' at runtime.
+   Options: 1) Provide guidance, 2) Modify requirements, 3) Skip, 4) Abort"
+
+  User response: "Update LegacyAdapter to use string template with accountId"
+
+  Attempt 5 (with user guidance, reusing same step 3 meta-judge spec): Judge PASS, 4.1/5.0
+
+Step 4-5: Each with parallel meta-judge + implementation, complete without issues
+```
+
+Total Agents: 20 (5 meta-judges + 5 implementations + 5 retries + 5 judges)
+
+---
 
 ## Best Practices
 
