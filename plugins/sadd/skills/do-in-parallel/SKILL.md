@@ -914,258 +914,7 @@ After all agents complete (with retries as needed), aggregate results:
 
 ## Examples
 
-### Example 1: Code Simplification Across Modules
-
-**Input:**
-```
-/do-in-parallel "Simplify error handling to use early returns instead of nested if-else" \
-  --files "src/services/user.ts,src/services/order.ts,src/services/payment.ts"
-```
-
-**Analysis:**
-- Task type: Code transformation / refactoring
-- Per-target complexity: Medium (pattern-based transformation)
-- Output size: Medium (modified file)
-- Independence: Yes (separate files, no cross-dependencies)
-
-**Model Selection:** Sonnet (pattern-based, medium complexity)
-
-**Execution:**
-
-```
-Phase 3.5: Dispatch Meta-Judges (3 in parallel, one per target)
-  [All 3 meta-judges launched simultaneously]
-  Meta-judge for user.ts (Opus)...
-    → Generated target-specific evaluation specification YAML
-    → 3 rubric dimensions, 5 checklist items tailored to user.ts
-  Meta-judge for order.ts (Opus)...
-    → Generated target-specific evaluation specification YAML
-    → 3 rubric dimensions, 6 checklist items tailored to order.ts
-  Meta-judge for payment.ts (Opus)...
-    → Generated target-specific evaluation specification YAML
-    → 3 rubric dimensions, 5 checklist items tailored to payment.ts
-
-Phase 5: Parallel Implementation Dispatch (after all meta-judges complete)
-  [All 3 implementation agents launched simultaneously]
-
-  Target: user.ts
-    Implementation (Sonnet)...
-      -> Converted 4 nested if-else blocks to early returns
-    Judge Verification (Opus, with user.ts meta-judge spec)...
-      -> VERDICT: PASS, SCORE: 4.2/5.0
-      -> IMPROVEMENTS: Consider extracting complex conditions
-
-  Target: order.ts
-    Implementation (Sonnet)...
-      -> Converted 6 nested if-else blocks to early returns
-    Judge Verification (Opus, with order.ts meta-judge spec)...
-      -> VERDICT: PASS, SCORE: 4.0/5.0
-      -> ISSUES: None
-
-  Target: payment.ts
-    Implementation (Sonnet)...
-      -> Converted 3 nested if-else blocks
-    Judge Verification (Opus, with payment.ts meta-judge spec)...
-      -> VERDICT: FAIL, SCORE: 3.2/5.0
-      -> ISSUES: Missing edge case for null amount
-    Retry Implementation (Sonnet)...
-      -> Added null check for payment amount
-    Judge Verification (Opus, with same payment.ts meta-judge spec)...
-      -> VERDICT: PASS, SCORE: 4.1/5.0
-```
-
-**Result:**
-```markdown
-## Parallel Execution Summary
-
-### Configuration
-- **Task:** Simplify error handling to use early returns
-- **Model:** Sonnet
-- **Targets:** 3 files
-
-### Results
-
-| Target | Model | Judge Score | Retries | Status | Summary |
-|--------|-------|-------------|---------|--------|---------|
-| src/services/user.ts | sonnet | 4.2/5.0 | 0 | SUCCESS | Converted 4 nested if-else blocks |
-| src/services/order.ts | sonnet | 4.0/5.0 | 0 | SUCCESS | Converted 6 nested if-else blocks |
-| src/services/payment.ts | sonnet | 4.1/5.0 | 1 | SUCCESS | Converted 3 blocks, added null check |
-
-### Overall Assessment
-- **Completed:** 3/3
-- **Total Retries:** 1
-- **Total Agents:** 11 (3 meta-judges + 3 implementations + 1 retry + 4 judges)
-- **Common patterns:** All files followed consistent early return pattern
-```
-
----
-
-### Example 2: Documentation Generation
-
-**Input:**
-```
-/do-in-parallel "Generate JSDoc documentation for all public methods" \
-  --files "src/api/users.ts,src/api/products.ts,src/api/orders.ts,src/api/auth.ts"
-```
-
-**Analysis:**
-- Task type: Documentation generation
-- Per-target complexity: Low (mechanical documentation)
-- Output size: Medium (inline comments)
-- Independence: Yes
-
-**Model Selection:** Haiku (mechanical, well-defined rules)
-
-**Dispatch:** 4 meta-judges (parallel) → 4 implementors (parallel) → 4 judges
-
-**Execution Summary:**
-
-| Target | Model | Judge Score | Retries | Status |
-|--------|-------|-------------|---------|--------|
-| src/api/users.ts | haiku | 4.0/5.0 | 0 | SUCCESS |
-| src/api/products.ts | haiku | 3.8/5.0 | 0 | SUCCESS |
-| src/api/orders.ts | haiku | 4.2/5.0 | 0 | SUCCESS |
-| src/api/auth.ts | haiku | 4.1/5.0 | 0 | SUCCESS |
-
-Total Agents: 12 (4 meta-judges + 4 implementations + 4 judges)
-
----
-
-### Example 3: Security Analysis
-
-**Input:**
-```
-/do-in-parallel "Analyze for potential SQL injection vulnerabilities and suggest fixes" \
-  --files "src/db/queries.ts,src/db/migrations.ts,src/api/search.ts"
-```
-
-**Analysis:**
-- Task type: Security analysis
-- Per-target complexity: High (security requires careful analysis)
-- Output size: Medium (analysis report + suggestions)
-- Independence: Yes
-
-**Model Selection:** Opus (security-critical, requires deep analysis)
-
-**Dispatch:** 3 meta-judges (parallel) → 3 implementors (parallel) → 3 judges + retries
-
-**Execution Summary:**
-
-| Target | Model | Judge Score | Retries | Status |
-|--------|-------|-------------|---------|--------|
-| src/db/queries.ts | opus | 4.5/5.0 | 0 | SUCCESS |
-| src/db/migrations.ts | opus | 4.3/5.0 | 0 | SUCCESS |
-| src/api/search.ts | opus | 4.0/5.0 | 1 | SUCCESS |
-
-Total Agents: 11 (3 meta-judges + 3 implementations + 1 retry + 4 judges)
-
----
-
-### Example 4: Test Generation with Partial Failure
-
-**Input:**
-```
-/do-in-parallel "Generate unit tests achieving 80% coverage" \
-  --targets "UserService,OrderService,PaymentService,NotificationService"
-```
-
-**Analysis:**
-- Task type: Test generation
-- Per-target complexity: Medium (follow testing patterns)
-- Output size: Large (multiple test files)
-- Independence: Yes (separate services)
-
-**Model Selection:** Sonnet (pattern-based, extensive output)
-
-**Dispatch:** 4 meta-judges (parallel) → 4 implementors (parallel) → judges + retries
-
-**Execution:**
-
-```
-Phase 3.5: Meta-judge Batch (4 in parallel, one per target)
-  [All 4 meta-judges launched simultaneously]
-  Meta-judge for UserService (Opus) → target-specific evaluation spec YAML
-  Meta-judge for OrderService (Opus) → target-specific evaluation spec YAML
-  Meta-judge for PaymentService (Opus) → target-specific evaluation spec YAML
-  Meta-judge for NotificationService (Opus) → target-specific evaluation spec YAML
-
-Phase 5: Implementation Batch (4 in parallel, after all meta-judges complete)
-  [All 4 implementors launched simultaneously]
-
-Target: UserService
-  -> Judge (Opus, with UserService meta-judge spec): PASS, 4.3/5.0
-
-Target: OrderService
-  -> Judge (Opus, with OrderService meta-judge spec): FAIL, 3.2/5.0 (missing edge cases)
-  -> Retry: Judge (Opus, same OrderService spec): PASS, 4.0/5.0
-
-Target: PaymentService
-  -> Judge (Opus, with PaymentService meta-judge spec): FAIL, 2.8/5.0 (wrong mock patterns)
-  -> Retry 1: Judge (Opus, same PaymentService spec): FAIL, 3.0/5.0 (still missing scenarios)
-  -> Retry 2: Judge (Opus, same PaymentService spec): FAIL, 3.1/5.0 (coverage only 65%)
-  -> Retry 3: Judge (Opus, same PaymentService spec): FAIL, 3.2/5.0 (coverage at 72%)
-  -> MARKED FAILED after max retries
-
-Target: NotificationService
-  -> Judge (Opus, with NotificationService meta-judge spec): PASS, 4.1/5.0
-```
-
-**Result:**
-
-| Target | Model | Judge Score | Retries | Status |
-|--------|-------|-------------|---------|--------|
-| UserService | sonnet | 4.3/5.0 | 0 | SUCCESS |
-| OrderService | sonnet | 4.0/5.0 | 1 | SUCCESS |
-| PaymentService | sonnet | 3.2/5.0 | 3 | FAILED |
-| NotificationService | sonnet | 4.1/5.0 | 0 | SUCCESS |
-
-**Overall:** 3/4 completed, 1 failed
-
-**Escalation for PaymentService:**
-```markdown
-### Failed Target: PaymentService
-- **Final Score:** 3.2/5.0
-- **Persistent Issues:**
-  - Test coverage at 72%, target is 80%
-  - Complex async scenarios not fully covered
-- **Options:**
-  1. Provide guidance on specific async patterns to test
-  2. Accept 72% coverage as sufficient
-  3. Manual test writing for complex scenarios
-```
-
----
-
-### Example 5: Inferred Targets from Task
-
-**Input:**
-```
-/do-in-parallel "Apply consistent logging format to src/handlers/user.ts, src/handlers/order.ts, and src/handlers/product.ts"
-```
-
-**Analysis:**
-- Targets inferred: 3 files extracted from task description
-- Task type: Code transformation
-- Complexity: Low
-- Independence: Yes
-
-**Model Selection:** Haiku (simple, mechanical)
-
-**Dispatch:** 3 meta-judges (parallel) → 3 implementors (parallel) → 3 judges
-
-**Execution Summary:**
-
-| Target | Model | Judge Score | Retries | Status |
-|--------|-------|-------------|---------|--------|
-| src/handlers/user.ts | haiku | 4.2/5.0 | 0 | SUCCESS |
-| src/handlers/order.ts | haiku | 4.0/5.0 | 0 | SUCCESS |
-| src/handlers/product.ts | haiku | 4.1/5.0 | 0 | SUCCESS |
-
-Total Agents: 9 (3 meta-judges + 3 implementations + 3 judges)
-
----
-
-### Example 6: Parallel Agents After a Previous Task (Pre-existing Changes from Prior Batch)
+### Example 1: Parallel Agents After a Previous Task (Pre-existing Changes from Prior Batch)
 
 **Scenario:**
 
@@ -1340,7 +1089,7 @@ Phase 6: Summary
 
 ---
 
-### Example 7: User-Modified Codebase Before Parallel Dispatch (Pre-existing Changes from User)
+### Example 2: User-Modified Codebase Before Parallel Dispatch (Pre-existing Changes from User)
 
 **Scenario:**
 
@@ -1460,7 +1209,7 @@ Phase 6: Summary
 
 ---
 
-### Example 8: Requirement Grouping -- Mixed Repeatable + Independent
+### Example 3: Requirement Grouping -- Mixed Repeatable + Independent
 
 **Input:**
 
@@ -1802,7 +1551,7 @@ Use Task tool:
 
 ---
 
-### Example 9: Requirement Grouping -- Shared + Repeatable Combined
+### Example 4: Requirement Grouping -- Shared + Repeatable Combined
 
 **Input:**
 
@@ -2185,7 +1934,7 @@ Retry Decision:
 
 ---
 
-### Example 10: Requirement Grouping -- All Independent
+### Example 5: Requirement Grouping -- All Independent
 
 **Input:**
 
