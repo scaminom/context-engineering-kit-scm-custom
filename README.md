@@ -140,7 +140,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>5%-30%</td>
 <td>1%-20%</td>
 <td>0</td>
-<td>Accuracy depends on model, but with context growth LLM accuracy degrades exponentially</td>
+<td>Accuracy depends on model, but with context growth LLM quality degrades exponentially</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/reflexion/reflect">/reflect</a></td>
@@ -176,7 +176,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>71%</td>
 <td>50%</td>
 <td>3x-5x</td>
-<td>Resolves all issues similarly to /do-and-judge, but separately per file group</td>
+<td>Resolves all issues similarly to `/do-and-judge`, but separately per file group</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/sdd">/plan + /implement</a></td>
@@ -185,7 +185,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>85%</td>
 <td>70%</td>
 <td>5x-20x</td>
-<td>Performs the /do-in-steps flow, but the specification mitigates issues caused by inconsistent architecture and codebase size</td>
+<td>Performs the `/do-in-steps` flow, but the specification mitigates issues caused by inconsistent architecture and codebase size</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/sdd/brainstorm">/brainstorm</a> + <a href="https://cek.neolab.finance/plugins/sdd/plan">/plan</a> + <a href="https://cek.neolab.finance/plugins/sdd/implement">/implement</a></td>
