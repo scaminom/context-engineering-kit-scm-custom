@@ -34,8 +34,8 @@ The marketplace is based on prompts used daily by our company developers for a l
 Updates from key releases:
 
 - **v2.0.0:** [Spec-Driven Development plugin](https://cek.neolab.finance/plugins/sdd) was rewritten from scratch. It is now able to produce working code in 99% of cases on real-life production projects!
-- **v2.1.0:** [Spec-Driven Development plugin](https://cek.neolab.finance/plugins/sdd) agents include high level code quality guidlines from [DDD plugin](https://cek.neolab.finance/plugins/ddd).
-- **v2.2.0:** [Subagent-Driven Development plugin](https://cek.neolab.finance/plugins/sadd) now works as a distiled version of [SDD plugin](https://cek.neolab.finance/plugins/sdd) using meta-judge and judge sub-agents for specification generation on the fly and in parallel to implementation. [DDD plugin](https://cek.neolab.finance/plugins/ddd) now includes Clean Architecture, DDD, SOLID, Functional Programming, and other patterns examples as rules that automatically added to the context during code writing.
+- **v2.1.0:** [Spec-Driven Development plugin](https://cek.neolab.finance/plugins/sdd) agents include high level code quality guidelines from [DDD plugin](https://cek.neolab.finance/plugins/ddd).
+- **v2.2.0:** [Subagent-Driven Development plugin](https://cek.neolab.finance/plugins/sadd) now works as a distilled version of [SDD plugin](https://cek.neolab.finance/plugins/sdd) using meta-judge and judge sub-agents for specification generation on the fly and in parallel to implementation. [DDD plugin](https://cek.neolab.finance/plugins/ddd) now includes Clean Architecture, DDD, SOLID, Functional Programming, and other pattern examples as rules that are automatically added to the context during code writing.
 
 ## Quick Start
 
@@ -115,21 +115,100 @@ However, the main plugins we recommend starting from are [Subagent-Driven Develo
 
 ### Agent Reliability Engineering
 
-The 3 plugins in this marketplace are designed to improve how accuratly and consistently agent follows provided instructions and decrease amount of hallucinations and bias toward incorrect solutions. They are not concurrents, rather complimentary to each other, because they allow to balance reliability vs token cost per task complexity. There high level comparision of different agent usage approaches vs probablity to receive results that fully accurate and include 0 halicunations based on task complexity:
+The 3 plugins in this marketplace are designed to improve how accurately and consistently the agent follows provided instructions and decrease the amount of hallucinations and bias toward incorrect solutions. They are not competitors, rather complementary to each other, because they allow you to balance reliability vs token cost. Here is a high-level comparison of different agent usage approaches vs probability to receive results that are fully accurate and include zero hallucinations based on task complexity:
 
-|          | p: probability to recive accurate results for following amount of changed files | | |
-| Approach | 1-3 | 4-10 | 10-20 | 20+ | Tokens Overhead | What does this mean in practice |
-|----------|-----------|------|-------|-----|-----------------|---------------------------------|
-| One-shot prompt | 60%-80% | 30%-50% | 5%-30% | 1%-20% | 0 | Depend on model. With context growth LLM accuracy degrades exponentially |
-| [/reflect](https://cek.neolab.finance/plugins/reflexion/reflect) | 68%-91% | 49%-71% | 13%-41% | 1%-30% | 1k-3k | Agent find and fix missed requirements |
-| [/reflect](https://cek.neolab.finance/plugins/reflexion/reflect) + [/memorize](https://cek.neolab.finance/plugins/reflexion/memorize) | 79%-87% | 60%-79% | 34%-42% | 5%-30% | 2k-5k | Agent extract repetable mistakes and avoid them during new tasks |
-| [/do-and-judge](https://cek.neolab.finance/plugins/sadd/do-and-judge) | 90% | 83% | 60% | 30% | 1.5x-3x | Mitigates context rot, bias, hallcunations, missed requirements using judge sub-agent | 
-| [/do-in-steps](https://cek.neolab.finance/plugins/sadd/do-in-steps) | 92% | 90% | 71% | 50% | 3x-5x | Resolve all issues like /do-and-judge, but separatly per file group |
-| [/plan + /implement](https://cek.neolab.finance/plugins/sdd) | 94% | 93% | 85% | 70% | 5x-20x | Specification mitigate issues caused by inconsistent architecture and codebase |
-| [/brainstorm](https://cek.neolab.finance/plugins/sdd/brainstorm) + [/plan](https://cek.neolab.finance/plugins/sdd/plan) + [/implement](https://cek.neolab.finance/plugins/sdd/implement) | 95% | 95% | 90% | 80% | 5x-20x | Brainstorming decrease amount of incorrect decisions and missed requirements |
-| [/plan](https://cek.neolab.finance/plugins/sdd/plan) + human review + [/implement](https://cek.neolab.finance/plugins/sdd/implement) | 99% | 99% | 99% | 95% | 5x-35x | Human review mitigates misunderstanding of requirements by LLM |
+<table>
+<thead>
+<tr>
+<th rowspan="2">Approach</th>
+<th colspan="4">p: probability to receive accurate results for following amount of changed files</th>
+<th rowspan="2">Tokens Overhead</th>
+<th rowspan="2">What does this mean in practice</th>
+</tr>
+<tr>
+<th>1-3</th>
+<th>4-10</th>
+<th>10-20</th>
+<th>20+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One-shot prompt</td>
+<td>60%-80%</td>
+<td>30%-50%</td>
+<td>5%-30%</td>
+<td>1%-20%</td>
+<td>0</td>
+<td>Depends on model. With context growth LLM accuracy degrades exponentially</td>
+</tr>
+<tr>
+<td><a href="https://cek.neolab.finance/plugins/reflexion/reflect">/reflect</a></td>
+<td>68%-91%</td>
+<td>49%-71%</td>
+<td>13%-41%</td>
+<td>1%-30%</td>
+<td>1k-3k</td>
+<td>Agent finds and fixes missed requirements</td>
+</tr>
+<tr>
+<td><a href="https://cek.neolab.finance/plugins/reflexion/reflect">/reflect</a> + <a href="https://cek.neolab.finance/plugins/reflexion/memorize">/memorize</a></td>
+<td>79%-87%</td>
+<td>60%-79%</td>
+<td>34%-42%</td>
+<td>5%-30%</td>
+<td>2k-5k</td>
+<td>Agent extracts repeatable mistakes and avoids them during new tasks</td>
+</tr>
+<tr>
+<td><a href="https://cek.neolab.finance/plugins/sadd/do-and-judge">/do-and-judge</a></td>
+<td>90%</td>
+<td>83%</td>
+<td>60%</td>
+<td>30%</td>
+<td>1.5x-3x</td>
+<td>Mitigates context rot, bias, hallucinations, missed requirements using judge sub-agent</td>
+</tr>
+<tr>
+<td><a href="https://cek.neolab.finance/plugins/sadd/do-in-steps">/do-in-steps</a></td>
+<td>92%</td>
+<td>90%</td>
+<td>71%</td>
+<td>50%</td>
+<td>3x-5x</td>
+<td>Resolves all issues like /do-and-judge, but separately per file group</td>
+</tr>
+<tr>
+<td><a href="https://cek.neolab.finance/plugins/sdd">/plan + /implement</a></td>
+<td>94%</td>
+<td>93%</td>
+<td>85%</td>
+<td>70%</td>
+<td>5x-20x</td>
+<td>Specification mitigates issues caused by inconsistent architecture and codebase</td>
+</tr>
+<tr>
+<td><a href="https://cek.neolab.finance/plugins/sdd/brainstorm">/brainstorm</a> + <a href="https://cek.neolab.finance/plugins/sdd/plan">/plan</a> + <a href="https://cek.neolab.finance/plugins/sdd/implement">/implement</a></td>
+<td>95%</td>
+<td>95%</td>
+<td>90%</td>
+<td>80%</td>
+<td>5x-20x</td>
+<td>Brainstorming decreases the amount of incorrect decisions and missed requirements</td>
+</tr>
+<tr>
+<td><a href="https://cek.neolab.finance/plugins/sdd/plan">/plan</a> + human review + <a href="https://cek.neolab.finance/plugins/sdd/implement">/implement</a></td>
+<td>99%</td>
+<td>99%</td>
+<td>99%</td>
+<td>95%</td>
+<td>5x-35x</td>
+<td>Human review mitigates misunderstanding of requirements by LLM</td>
+</tr>
+</tbody>
+</table>
 
-> Relaibility metrics are based on real development usage on production projects for more than 6 months.
+> Reliability metrics are based on real development usage on production projects for more than 6 months.
 
 ## Plugins List
 
