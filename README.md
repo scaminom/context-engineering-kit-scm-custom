@@ -121,7 +121,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <thead>
 <tr>
 <th rowspan="2">Approach</th>
-<th colspan="4">p: probability to receive accurate results for following amount of changed files</th>
+<th colspan="4">Probability to receive fully accurate results for following amount of changed files (p)</th>
 <th rowspan="2">Tokens Overhead</th>
 <th rowspan="2">What does this mean in practice</th>
 </tr>
