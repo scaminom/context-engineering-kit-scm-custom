@@ -25,7 +25,7 @@ The marketplace is based on prompts used daily by our company developers for a l
 - **Simple to Use** - Easy to install and use without any dependencies. Contains automatically used skills and self-explanatory commands.
 - **Token-Efficient** - Carefully crafted prompts and architecture, preferring command-oriented skills with sub-agents over general information skills when possible, to minimize populating context with unnecessary information.
 - **Quality-Focused** - Each plugin is focused on meaningfully improving agent results in a specific area.
-- **Granular** - Install only the plugins you need. Each plugin loads only its specific agents, commands, and skills. Each without overlap and redundant skills.
+- **Granular** - Install only the plugins you need. Each plugin loads only its specific agents, commands, and skills. Each without overlap or redundant skills.
 - **Scientifically proven** - Plugins are based on proven techniques and patterns that were tested by well-trusted benchmarks and studies.
 - **Open-Standards** - Skills are based on [agentskills.io](https://agentskills.io) specification. The [SDD](https://cek.neolab.finance/plugins/sdd) plugin is based on the **Arc42** specification standard for software development documentation.
 
@@ -115,13 +115,13 @@ However, the main plugins we recommend starting from are [Subagent-Driven Develo
 
 ### Agent Reliability Engineering
 
-The 3 plugins in this marketplace are designed to improve how accurately and consistently the agent follows provided instructions and decrease the amount of hallucinations and bias toward incorrect solutions. They are not competitors, rather complementary to each other, because they allow you to balance reliability vs token cost. Here is a high-level comparison of different agent usage approaches vs probability to receive results that are fully accurate and include zero hallucinations based on task complexity:
+The 3 plugins in this marketplace are designed to improve how accurately and consistently the agent follows provided instructions and reduce the number of hallucinations and bias toward incorrect solutions. They are not competitors but rather complementary to each other, because they allow you to balance reliability vs token cost. Here is a high-level comparison of different agent usage approaches vs probability to receive results that are fully accurate and include zero hallucinations based on task complexity:
 
 <table>
 <thead>
 <tr>
 <th rowspan="2">Approach</th>
-<th colspan="4">Probability to receive fully accurate results for following amount of changed files (p)</th>
+<th colspan="4">Probability to receive fully accurate results for the following number of changed files (p)</th>
 <th rowspan="2">Tokens Overhead</th>
 <th rowspan="2">What does this mean in practice</th>
 </tr>
@@ -140,7 +140,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>5%-30%</td>
 <td>1%-20%</td>
 <td>0</td>
-<td>Depends on model. With context growth LLM accuracy degrades exponentially</td>
+<td>Accuracy depends on model, but with context growth LLM accuracy degrades exponentially</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/reflexion/reflect">/reflect</a></td>
@@ -149,7 +149,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>13%-41%</td>
 <td>1%-30%</td>
 <td>1k-3k</td>
-<td>Agent finds and fixes missed requirements</td>
+<td>Agent finds and fixes missed requirements on its own</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/reflexion/reflect">/reflect</a> + <a href="https://cek.neolab.finance/plugins/reflexion/memorize">/memorize</a></td>
@@ -167,7 +167,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>60%</td>
 <td>30%</td>
 <td>1.5x-3x</td>
-<td>Mitigates context rot, bias, hallucinations, missed requirements using judge sub-agent</td>
+<td>Mitigates context rot, bias, hallucinations and missed requirements using Judge sub-agent</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/sadd/do-in-steps">/do-in-steps</a></td>
@@ -176,7 +176,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>71%</td>
 <td>50%</td>
 <td>3x-5x</td>
-<td>Resolves all issues like /do-and-judge, but separately per file group</td>
+<td>Resolves all issues similarly to /do-and-judge, but separately per file group</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/sdd">/plan + /implement</a></td>
@@ -185,7 +185,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>85%</td>
 <td>70%</td>
 <td>5x-20x</td>
-<td>Specification mitigates issues caused by inconsistent architecture and codebase</td>
+<td>Performs the /do-in-steps flow, but the specification mitigates issues caused by inconsistent architecture and codebase size</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/sdd/brainstorm">/brainstorm</a> + <a href="https://cek.neolab.finance/plugins/sdd/plan">/plan</a> + <a href="https://cek.neolab.finance/plugins/sdd/implement">/implement</a></td>
@@ -194,7 +194,7 @@ The 3 plugins in this marketplace are designed to improve how accurately and con
 <td>90%</td>
 <td>80%</td>
 <td>5x-20x</td>
-<td>Brainstorming decreases the amount of incorrect decisions and missed requirements</td>
+<td>Brainstorming decreases the number of incorrect decisions and missed requirements</td>
 </tr>
 <tr>
 <td><a href="https://cek.neolab.finance/plugins/sdd/plan">/plan</a> + human review + <a href="https://cek.neolab.finance/plugins/sdd/implement">/implement</a></td>
@@ -234,7 +234,7 @@ To view all available plugins:
 
 ### [Reflexion](https://cek.neolab.finance/plugins/reflexion)
 
-Collection of commands that force the LLM to reflect on previous response and output. Includes **automatic reflection hooks** that trigger when you include "reflect" in your prompt.
+Collection of commands that force the LLM to reflect on the previous response and output. Includes **automatic reflection hooks** that trigger when you include "reflect" in your prompt.
 
 **How to install**
 

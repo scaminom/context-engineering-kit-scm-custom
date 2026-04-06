@@ -477,38 +477,143 @@ Awaiting your decision...
 
 ## Examples
 
-### Example 1: Simple Refactoring (Pass on First Try)
+### Example 1: Documentation Update (Pass on First Try)
 
 **Input:**
 
 ```
-/do-and-judge Extract the validation logic from UserController into a separate UserValidator class
+/do-and-judge Rewrite the API authentication section in docs/api-reference.md to cover the new OAuth2 flow
 ```
 
 **Execution:**
 
 ```
 Phase 1: Task Analysis
-  → Model: Opus
+  - Complexity: Medium (rewriting existing documentation with new technical flow)
+  - Risk: Low (documentation only, no code changes)
+  - Scope: Small (single file, focused section)
+  → Model: opus
+  → Agent type: general-purpose
+    Reasoning: This is a documentation task — writing and restructuring
+    prose, not implementing code. The sdd:developer agent is optimized
+    for code implementation patterns, not technical writing. A
+    general-purpose agent handles documentation tasks more effectively
+    because it applies broader writing and reasoning skills without
+    code-centric constraints.
 
 Phase 2: Parallel Dispatch (single message, 2 tool calls)
   Tool call 1 — Meta-judge (Opus)...
+    Meta-judge prompt sent:
+    ┌─────────────────────────────────────────────────────────
+    │ ## Task
+    │ Generate an evaluation specification yaml for the
+    │ following task. You will produce rubrics, checklists,
+    │ and scoring criteria that a judge agent will use to
+    │ evaluate the implementation artifact.
+    │
+    │ CLAUDE_PLUGIN_ROOT=...
+    │
+    │ ## User Prompt
+    │ Rewrite the API authentication section in
+    │ docs/api-reference.md to cover the new OAuth2 flow
+    │
+    │ ## Context
+    │ Existing docs/api-reference.md contains an outdated
+    │ "Authentication" section describing API key auth.
+    │ The codebase recently migrated to OAuth2 with PKCE.
+    │ Related source: src/auth/oauth2.ts, src/auth/config.ts.
+    │
+    │ ## Artifact Type
+    │ documentation
+    │
+    │ ## Instructions
+    │ Return only the final evaluation specification YAML
+    │ in your response.
+    └─────────────────────────────────────────────────────────
     → Generated evaluation specification YAML
-    → 3 rubric dimensions, 6 checklist items
-  Tool call 2 — Implementation (sadd:developer + Opus)...
-    → Created UserValidator.ts
-    → Updated UserController to use validator
-    → Summary: 2 files modified, validation extracted
+    → 3 rubric dimensions (accuracy, completeness, clarity)
+    → 5 checklist items
+
+  Tool call 2 — Implementation (general-purpose + Opus)...
+    Implementation prompt sent (abbreviated):
+    ┌─────────────────────────────────────────────────────────
+    │ ## Reasoning Approach
+    │ Before taking any action, think through this task
+    │ systematically.
+    │ [... step-by-step reasoning template ...]
+    │
+    │ ## Task
+    │ Rewrite the API authentication section in
+    │ docs/api-reference.md to cover the new OAuth2 flow.
+    │ Replace the outdated API key auth documentation with
+    │ OAuth2 + PKCE flow documentation including token
+    │ endpoints, scopes, refresh token handling, and
+    │ example requests.
+    │
+    │ ## Constraints
+    │ - Follow existing documentation patterns and conventions
+    │ - Make minimal changes to achieve the objective
+    │ - Do not introduce new dependencies without justification
+    │ - Ensure changes are testable
+    │
+    │ ## Output
+    │ Provide your implementation along with a "Summary"
+    │ section containing:
+    │ - Files modified (full paths)
+    │ - Key changes (3-5 bullet points)
+    │ - Any decisions made and rationale
+    │ - Potential concerns or follow-up needed
+    │
+    │ ## Self-Critique Verification (MANDATORY)
+    │ [... verification questions and revision process ...]
+    └─────────────────────────────────────────────────────────
+    → Rewrote Authentication section in docs/api-reference.md
+    → Added OAuth2 flow diagram, token endpoints, scopes table
+    → Added code examples for authorization and token refresh
+    → Summary: 1 file modified, authentication section rewritten
 
 Phase 3: Dispatch Judge (with meta-judge specification)
-  Judge (sadd:judge)...
+  NOTE: No pre-existing changes — first task on a clean codebase.
+  The "Pre-existing Changes" section is OMITTED from the judge prompt.
+
+  Judge prompt sent:
+  ┌─────────────────────────────────────────────────────────
+  │ You are evaluating an implementation artifact against
+  │ an evaluation specification produced by the meta judge.
+  │
+  │ CLAUDE_PLUGIN_ROOT=...
+  │
+  │ ## User Prompt
+  │ Rewrite the API authentication section in
+  │ docs/api-reference.md to cover the new OAuth2 flow
+  │
+  │ ## Evaluation Specification
+  │ ```yaml
+  │ {meta-judge's evaluation specification YAML}
+  │ ```
+  │
+  │ ## Implementation Output
+  │ Files: docs/api-reference.md (modified)
+  │ Key changes: Replaced API key auth section with OAuth2
+  │ + PKCE flow, added token endpoints, scopes table,
+  │ and code examples for authorization and refresh...
+  │
+  │ ## Instructions
+  │ Follow your full judge process...
+  └─────────────────────────────────────────────────────────
+
+  Judge (sadd:judge + Opus)...
     → VERDICT: PASS, SCORE: 4.2/5.0
     → ISSUES: None
-    → IMPROVEMENTS: Add input validation for edge cases
+    → IMPROVEMENTS: Add error response examples for expired tokens
+
+Phase 4: Parse Verdict
+  → Score 4.2 ≥ 4.0 threshold → PASS
+  → No retry needed (Phase 5 skipped)
 
 Phase 6: Final Report
   ✅ PASS on attempt 1
-  Files: UserValidator.ts (new), UserController.ts (modified)
+  Files: docs/api-reference.md (modified)
 ```
 
 ### Example 2: Complex Task (Pass After Retry)
