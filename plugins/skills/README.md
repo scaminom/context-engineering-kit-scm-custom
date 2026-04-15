@@ -14,6 +14,12 @@ Skills installed globally load their `description:` into **every** session. If y
 | `/skills:setup-design-pattern-advisor` | GoF pattern recommendations grounded in problem context | SKILL.md + pattern-catalog |
 | `/skills:setup-frontend-design` | Distinctive, production-grade frontend UI | SKILL.md |
 | `/skills:setup-api-design` | REST API design patterns | SKILL.md |
+| `/skills:setup-angular-signals` | Angular 16+ signals, zone-less change detection | SKILL.md |
+| `/skills:setup-rxjs-patterns` | RxJS patterns for Angular (operators, cleanup, Signals integration) | SKILL.md |
+| `/skills:setup-clean-architecture` | Clean Architecture (dependency rule, ports & adapters, hexagonal) | SKILL.md + references |
+| `/skills:setup-project-md-generator` | Generate / audit CLAUDE.md for a project | SKILL.md |
+| `/skills:setup-project-rules-generator` | Generate / audit `.claude/rules/` for a project | SKILL.md |
+| `/skills:setup-graphify` | Turn any input into a clustered knowledge graph | SKILL.md + references |
 
 ## Management
 
