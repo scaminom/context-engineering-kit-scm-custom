@@ -1,6 +1,6 @@
 {
   "name": "skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Per-project skill installer. Commands copy curated skills (dotnet-expert, design-pattern-advisor, frontend-design, api-design, ...) into <project>/.claude/skills/<name>/ so they activate only where you want them.",
   "author": {
     "name": "scaminom",

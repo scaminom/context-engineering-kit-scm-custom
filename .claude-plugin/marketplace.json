@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "context-engineering-kit-scm",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Hand-crafted collection of advanced context engineering techniques and patterns with minimal token footprint focused on improving agent result quality.",
   "owner": {
     "name": "NeoLabHQ",
@@ -142,8 +142,8 @@
     },
     {
       "name": "rules",
-      "description": "Project-scoped coding rules. Slash commands emit .claude/rules/<topic>.md with stack-aware globs inferred from the project, and register a pointer under ## Agent docs in CLAUDE.md. Rules that reference skills (dotnet-expert, design-pattern-advisor, frontend-design, api-design) prompt the user before embedding the reference.",
-      "version": "0.1.0",
+      "description": "Project-scoped coding rules. Slash commands emit .claude/rules/<topic>.md with stack-aware globs inferred from the project, and register a pointer under ## Agent docs in CLAUDE.md. Rules that reference skills (dotnet-expert, design-pattern-advisor, frontend-design, api-design) prompt the user before embedding the reference. Includes /rules:list and /rules:doctor for inventory and consistency audits.",
+      "version": "0.2.0",
       "author": {
         "name": "scaminom",
         "email": "sebastian.camino@proconty.com"
@@ -153,8 +153,8 @@
     },
     {
       "name": "skills",
-      "description": "Per-project skill installer. Slash commands copy curated skills (dotnet-expert, design-pattern-advisor, frontend-design, api-design) into <project>/.claude/skills/<name>/ so they activate only where you want them.",
-      "version": "0.1.0",
+      "description": "Per-project skill installer. Slash commands copy curated skills (dotnet-expert, design-pattern-advisor, frontend-design, api-design) into <project>/.claude/skills/<name>/ so they activate only where you want them. Includes /skills:list for inventory.",
+      "version": "0.2.0",
       "author": {
         "name": "scaminom",
         "email": "sebastian.camino@proconty.com"
