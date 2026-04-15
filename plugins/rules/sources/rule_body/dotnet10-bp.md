@@ -1,32 +1,17 @@
 ---
-name: tech-stack:add-dotnet8-best-practices
-description: Emit .claude/rules/dotnet8-best-practices.md with ASP.NET Core 8 rules and register pointer in CLAUDE.md
-argument-hint: Optional argument which practices to add or avoid
----
-
-# Setup ASP.NET Core 8 Best Practices
-
-Your job: create a scoped rules file under `.claude/rules/` and register a pointer in `CLAUDE.md`. Do NOT dump the rules content into `CLAUDE.md` itself.
-
-## Step 1 — Write the rules file
-
-Use the Write tool to create `.claude/rules/dotnet8-best-practices.md` with the following content, strictly as-is:
-
-```markdown
----
-description: ASP.NET Core 8 performance and reliability rules (auto-loads on .NET files)
+description: ASP.NET Core 10 performance and reliability rules (auto-loads on .NET files)
 globs: ["**/*.cs", "**/*.csproj", "**/*.cshtml", "**/*.razor"]
 ---
 
-# ASP.NET Core 8 Best Practices
+# ASP.NET Core 10 Best Practices
 
-Guidelines for maximizing performance and reliability of ASP.NET Core 8 (LTS) apps. Source: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/best-practices?view=aspnetcore-8.0
+Guidelines for maximizing performance and reliability of ASP.NET Core 10 apps. Source: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/best-practices?view=aspnetcore-10.0
 
 ## General Principles
 
 - **Cache aggressively** - See ASP.NET Core caching overview.
 - **Understand hot code paths** - Frequently-called paths limit scale-out; optimize them first.
-- **Use the latest ASP.NET Core release** - Each release includes perf improvements. .NET 8 is LTS and supports HTTP/2 by default.
+- **Use the latest ASP.NET Core release** - Each release includes perf improvements. Target .NET 10 for HTTP/3, improved GC, and throughput gains.
 
 ## Avoid Blocking Calls
 
@@ -136,38 +121,3 @@ Guidelines for maximizing performance and reliability of ASP.NET Core 8 (LTS) ap
 ## Request Validation
 
 - **Do not** assume `HttpRequest.ContentLength` is non-null. Null means unknown length, not zero. Comparisons with null return false and can bypass size checks.
-```
-
-## Step 2 — Register pointer in CLAUDE.md
-
-Use the Read tool to check if `CLAUDE.md` exists in project root.
-
-- If `CLAUDE.md` does NOT exist: create it with this minimal content:
-
-  ```markdown
-  # Project
-
-  ## Agent docs
-
-  - `.claude/rules/dotnet8-best-practices.md` — ASP.NET Core 8 performance & reliability (auto-loads on `**/*.cs`)
-  ```
-
-- If `CLAUDE.md` EXISTS:
-  - If it already contains an `## Agent docs` section: use Edit tool to append the pointer line under that section, unless the exact same line already exists.
-  - If no `## Agent docs` section: use Edit tool to append a new section at the end:
-
-    ```markdown
-
-    ## Agent docs
-
-    - `.claude/rules/dotnet8-best-practices.md` — ASP.NET Core 8 performance & reliability (auto-loads on `**/*.cs`)
-    ```
-
-Do not modify any other part of `CLAUDE.md`.
-
-## Step 3 — Confirm
-
-Report back:
-- Path of rules file written.
-- Whether `CLAUDE.md` was created or updated.
-- The pointer line added.

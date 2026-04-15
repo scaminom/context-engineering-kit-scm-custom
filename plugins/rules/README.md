@@ -41,6 +41,12 @@ Rules referencing skills (e.g. `setup-dotnet` → `dotnet-expert`) **prompt the 
 | `/rules:setup-separation-of-concerns` | Separation of concerns | — |
 | `/rules:setup-call-site-honesty` | Call-site honesty | — |
 | `/rules:setup-domain-naming` | Domain-specific naming | — |
+| `/rules:setup-typescript-bp` | TypeScript best practices (fixed globs `**/*.ts,tsx`) | — |
+| `/rules:setup-dotnet8-bp` | ASP.NET Core 8 performance & reliability (fixed globs `**/*.cs`) | — |
+| `/rules:setup-dotnet10-bp` | ASP.NET Core 10 performance & reliability (fixed globs `**/*.cs`) | — |
+| `/rules:list` | Table of installed rules with globs + pointer status | — |
+| `/rules:doctor` | Audit consistency: orphan rules, broken pointers, missing skills, dead globs | — |
+| `/rules:uninstall <slug>` | Remove `.claude/rules/<slug>.md` and its CLAUDE.md pointer | — |
 
 ## Stack → globs
 

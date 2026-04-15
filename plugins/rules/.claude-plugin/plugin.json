@@ -1,6 +1,6 @@
 {
   "name": "rules",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Project-scoped coding rules. Commands emit .claude/rules/<topic>.md with stack-aware globs and register a pointer in CLAUDE.md. Rules referencing skills prompt the user before embedding the reference.",
   "author": {
     "name": "scaminom",

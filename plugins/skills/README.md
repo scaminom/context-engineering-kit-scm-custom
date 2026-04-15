@@ -15,6 +15,11 @@ Skills installed globally load their `description:` into **every** session. If y
 | `/skills:setup-frontend-design` | Distinctive, production-grade frontend UI | SKILL.md |
 | `/skills:setup-api-design` | REST API design patterns | SKILL.md |
 
+## Management
+
+- `/skills:list` — table of installed skills with their description and reference file counts.
+- `/skills:uninstall <name>` — remove `.claude/skills/<name>/` dir.
+
 ## How it works
 
 Each command copies `plugins/skills/sources/<name>/` → `<project>/.claude/skills/<name>/`. The skill becomes available **only** in that project.
