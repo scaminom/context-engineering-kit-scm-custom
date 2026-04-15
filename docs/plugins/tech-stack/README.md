@@ -41,4 +41,6 @@ CLAUDE.md is read by Claude at the start of every conversation. By placing codin
 ## Commands
 
 - [/tech-stack:add-typescript-best-practices](./add-typescript-best-practices.md) - Sets up TypeScript best practices and code style rules in your CLAUDE.md file, providing Claude with explicit guidelines for generating consistent, type-safe code.
+- [/tech-stack:add-dotnet10-best-practices](./add-dotnet10-best-practices.md) - Sets up ASP.NET Core 10 best practices (performance, async, HttpContext, DI) in your CLAUDE.md file.
+- [/tech-stack:add-dotnet8-best-practices](./add-dotnet8-best-practices.md) - Sets up ASP.NET Core 8 (LTS) best practices (performance, async, HttpContext, DI) in your CLAUDE.md file.
 

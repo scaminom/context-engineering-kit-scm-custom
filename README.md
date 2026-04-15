@@ -604,6 +604,8 @@ Commands for setting up language and framework-specific best practices.
 **Commands**
 
 - [/tech-stack:add-typescript-best-practices](https://cek.neolab.finance/plugins/tech-stack/add-typescript-best-practices) - Setup TypeScript best practices and code style rules in CLAUDE.md
+- [/tech-stack:add-dotnet10-best-practices](https://cek.neolab.finance/plugins/tech-stack/add-dotnet10-best-practices) - Setup ASP.NET Core 10 best practices in CLAUDE.md
+- [/tech-stack:add-dotnet8-best-practices](https://cek.neolab.finance/plugins/tech-stack/add-dotnet8-best-practices) - Setup ASP.NET Core 8 (LTS) best practices in CLAUDE.md
 
 ### [MCP](https://cek.neolab.finance/plugins/mcp)
 

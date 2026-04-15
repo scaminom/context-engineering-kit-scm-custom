@@ -43,3 +43,11 @@ Prompt engineering techniques and patterns for creating effective extensions. [M
 - `prompt-engineering` - Well-known prompt engineering techniques and patterns, includes Anthropic Best Practices and Agent Persuasion Principles.
 - `context-engineering` - Deep understanding of context mechanics in agent systems: attention budget, progressive disclosure, lost-in-middle effect, and practical optimization patterns.
 - `agent-evaluation` - Evaluation frameworks for agent systems including LLM-as-Judge techniques, multi-dimensional rubrics, bias mitigation, and the 95% performance finding.
+
+### Tech Stack
+
+Language and framework-specific best practices injected into CLAUDE.md. [More info](../plugins/tech-stack/README.md).
+
+- `add-typescript-best-practices` - Setup TypeScript best practices and code style rules in CLAUDE.md.
+- `add-dotnet10-best-practices` - Setup ASP.NET Core 10 best practices (performance, async, HttpContext, DI) in CLAUDE.md.
+- `add-dotnet8-best-practices` - Setup ASP.NET Core 8 (LTS) best practices (performance, async, HttpContext, DI) in CLAUDE.md.
