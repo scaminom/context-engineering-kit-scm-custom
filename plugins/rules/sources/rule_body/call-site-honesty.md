@@ -1,6 +1,7 @@
 ---
 description: Call-Site Honesty for Logging
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

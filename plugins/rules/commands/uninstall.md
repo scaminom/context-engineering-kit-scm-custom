@@ -1,5 +1,5 @@
 ---
-description: Remove an installed rule — deletes .claude/rules/<slug>.md and its pointer in CLAUDE.md
+description: Remove an installed rule — deletes .claude/rules/<slug>.md
 argument-hint: <slug>  (e.g. solid, dotnet, clean-architecture-ddd)
 ---
 
@@ -17,11 +17,11 @@ Let `SLUG` = the argument.
 
 Check whether `.claude/rules/<SLUG>.md` exists.
 
-- If it does NOT exist, tell the user: *"`.claude/rules/<SLUG>.md` not found. Nothing to uninstall."* and stop (don't touch CLAUDE.md either — the pointer might be stale; run `/rules:doctor` to clean it up).
+- If it does NOT exist, tell the user: *"`.claude/rules/<SLUG>.md` not found. Nothing to uninstall."* and stop.
 
 ## Step 3 — Confirm
 
-Ask: *"Remove `.claude/rules/<SLUG>.md` and its pointer in CLAUDE.md? (y/n)"*. Stop on `n`.
+Ask: *"Remove `.claude/rules/<SLUG>.md`? (y/n)"*. Stop on `n`.
 
 ## Step 4 — Delete rule file
 
@@ -29,16 +29,14 @@ Ask: *"Remove `.claude/rules/<SLUG>.md` and its pointer in CLAUDE.md? (y/n)"*. S
 rm .claude/rules/<SLUG>.md
 ```
 
-## Step 5 — Remove pointer from CLAUDE.md
+## Step 5 — Legacy pointer cleanup (best-effort)
 
-Read `CLAUDE.md`. Locate any line under `## Agent docs` that references `` `.claude/rules/<SLUG>.md` `` (exact substring match).
+Read `CLAUDE.md` if it exists. If a legacy pointer line under `## Agent docs` references `` `.claude/rules/<SLUG>.md` ``, use the Edit tool to delete that line. Leave the `## Agent docs` heading alone even if it becomes empty (user may keep it for other docs).
 
-- If found, use the Edit tool to delete that entire line.
-- If the `## Agent docs` section becomes empty after removal, leave the heading alone (don't delete headings — preserves user edits).
-- If no matching line exists, note it in the report but proceed (the file was already gone from the pointer list).
+Pointer lines are no longer required — rules auto-load from disk — so this step just cleans up old installs.
 
 ## Step 6 — Report
 
 - Rule file: deleted / not found.
-- CLAUDE.md pointer: removed / not found / file missing.
+- CLAUDE.md legacy pointer: removed / not found / file missing.
 - Suggest `/rules:list` to confirm.

@@ -1,6 +1,7 @@
 ---
 description: Frontend UI quality — distinctive design, accessible, performant, production-grade components.
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # Frontend Quality

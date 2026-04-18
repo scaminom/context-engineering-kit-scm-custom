@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "context-engineering-kit-scm",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Hand-crafted collection of advanced context engineering techniques and patterns with minimal token footprint focused on improving agent result quality.",
   "owner": {
     "name": "NeoLabHQ",
@@ -66,7 +66,7 @@
     {
       "name": "ddd",
       "description": "Introduces command to update CLAUDE.md with best practices for domain-driven development, focused on quality of code, includes Clean Architecture, SOLID principles, and other design patterns.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "author": {
         "name": "Vlad Goncharov",
         "email": "vlad.goncharov@neolab.finance"
@@ -132,7 +132,7 @@
     {
       "name": "rules",
       "description": "Project-scoped coding rules. Slash commands emit .claude/rules/<topic>.md with stack-aware globs inferred from the project, and register a pointer under ## Agent docs in CLAUDE.md. Includes /rules:setup-* for ~25 rules (SOLID/YAGNI/DRY/KISS/DDD/design-patterns/frontend/api-design/typescript-bp/dotnet8-bp/dotnet10-bp), /rules:list, /rules:doctor, /rules:uninstall. Rules referencing skills prompt before embedding the reference.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "author": {
         "name": "scaminom",
         "email": "sebastian.camino@proconty.com"

@@ -1,6 +1,7 @@
 ---
 description: .NET / ASP.NET Core coding guidance
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # .NET Coding Guidance

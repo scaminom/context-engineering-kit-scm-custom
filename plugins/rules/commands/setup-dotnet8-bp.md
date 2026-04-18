@@ -1,11 +1,11 @@
 ---
-description: Install ASP.NET Core 8 best practices as a project rule (fixed globs for .NET files)
+description: Install ASP.NET Core 8 best practices as a project rule (fixed paths for .NET files)
 argument-hint: No arguments
 ---
 
 # Setup ASP.NET Core 8 Best Practices Rule
 
-Install `.claude/rules/dotnet8-bp.md` from bundled source. Globs are fixed to `["**/*.cs", "**/*.csproj", "**/*.cshtml", "**/*.razor"]` — no stack inference.
+Install `.claude/rules/dotnet8-bp.md` from bundled source. Paths are fixed to `**/*.cs`, `**/*.csproj`, `**/*.cshtml`, `**/*.razor` — no stack inference.
 
 ## 1. Locate marketplace
 
@@ -28,13 +28,8 @@ mkdir -p .claude/rules
 cp "$MARKETPLACE/plugins/rules/sources/rule_body/dotnet8-bp.md" .claude/rules/dotnet8-bp.md
 ```
 
-## 4. Register pointer in CLAUDE.md
+The source file already has the `paths:` frontmatter baked in — no token replacement needed.
 
-Follow POINTER_REGISTRATION from `$MARKETPLACE/plugins/rules/STACK_DETECTION.md` with:
-- `<slug>` = `dotnet8-bp`
-- `<rule description>` = `ASP.NET Core 8 performance & reliability`
-- `<SUMMARY>` = `**/*.cs`
+## 4. Report
 
-## 5. Report
-
-Detected target framework · file written · CLAUDE.md action.
+Detected target framework · file written at `.claude/rules/dotnet8-bp.md`.

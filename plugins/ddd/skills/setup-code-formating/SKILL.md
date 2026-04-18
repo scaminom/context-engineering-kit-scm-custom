@@ -1,12 +1,12 @@
 ---
 name: ddd:setup-code-formating
-description: Emit .claude/rules/code-formatting.md with code formatting rules and register pointer in CLAUDE.md
+description: Emit .claude/rules/code-formatting.md with code formatting rules. Rules auto-load via paths — no CLAUDE.md pointer needed.
 argument-hint: None required - creates standard formatting configuration
 ---
 
 # Setup Code Formatting Rules
 
-Your job: create a scoped rules file under `.claude/rules/` and register a pointer in `CLAUDE.md`. Do NOT dump the rules content into `CLAUDE.md` itself.
+Your job: create a scoped rules file under `.claude/rules/`. Rules auto-load from that directory per the [official Claude Code memory docs](https://code.claude.com/docs/en/memory#organize-rules-with-claude/rules/) — do NOT write to `CLAUDE.md`.
 
 ## Step 1 — Write the rules file
 
@@ -15,7 +15,13 @@ Use the Write tool to create `.claude/rules/code-formatting.md` with the followi
 ```markdown
 ---
 description: Code formatting and style rules (auto-loads on source files)
-globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"]
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.mjs"
+  - "**/*.cjs"
 ---
 
 # Code Formatting
@@ -29,36 +35,8 @@ globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"]
 - Import order: external → internal → types
 ```
 
-## Step 2 — Register pointer in CLAUDE.md
-
-Use the Read tool to check if `CLAUDE.md` exists in project root.
-
-- If `CLAUDE.md` does NOT exist: create it with this minimal content:
-
-  ```markdown
-  # Project
-
-  ## Agent docs
-
-  - `.claude/rules/code-formatting.md` — code formatting rules (auto-loads on JS/TS files)
-  ```
-
-- If `CLAUDE.md` EXISTS:
-  - If it already contains an `## Agent docs` section: use Edit tool to append the pointer line under that section, unless the exact same line already exists.
-  - If no `## Agent docs` section: use Edit tool to append a new section at the end:
-
-    ```markdown
-
-    ## Agent docs
-
-    - `.claude/rules/code-formatting.md` — code formatting rules (auto-loads on JS/TS files)
-    ```
-
-Do not modify any other part of `CLAUDE.md`.
-
-## Step 3 — Confirm
+## Step 2 — Confirm
 
 Report back:
 - Path of rules file written.
-- Whether `CLAUDE.md` was created or updated.
-- The pointer line added.
+- Note that the rule will auto-load when Claude reads any matching source file — no CLAUDE.md edit required.

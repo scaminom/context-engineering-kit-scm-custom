@@ -1,6 +1,8 @@
 ---
 description: TypeScript code style and best practices (auto-loads on TS files)
-globs: ["**/*.ts", "**/*.tsx"]
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
 ---
 
 # TypeScript Best Practices

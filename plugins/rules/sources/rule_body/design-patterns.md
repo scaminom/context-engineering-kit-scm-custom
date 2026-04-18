@@ -1,6 +1,7 @@
 ---
 description: Design pattern guidance — recognize recurring problems, apply GoF patterns pragmatically.
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # Design Patterns

@@ -1,6 +1,7 @@
 ---
 description: Use Early Returns to Reduce Nesting
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

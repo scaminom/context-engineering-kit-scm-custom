@@ -1,6 +1,7 @@
 ---
 description: Function and File Size Limits
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

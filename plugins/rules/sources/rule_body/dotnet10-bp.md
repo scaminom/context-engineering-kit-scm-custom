@@ -1,6 +1,10 @@
 ---
 description: ASP.NET Core 10 performance and reliability rules (auto-loads on .NET files)
-globs: ["**/*.cs", "**/*.csproj", "**/*.cshtml", "**/*.razor"]
+paths:
+  - "**/*.cs"
+  - "**/*.csproj"
+  - "**/*.cshtml"
+  - "**/*.razor"
 ---
 
 # ASP.NET Core 10 Best Practices

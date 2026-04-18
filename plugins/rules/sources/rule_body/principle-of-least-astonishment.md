@@ -1,6 +1,7 @@
 ---
 description: Principle of Least Astonishment — Functions Must Do Only What Their Name Promises
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

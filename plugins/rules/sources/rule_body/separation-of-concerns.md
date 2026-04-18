@@ -1,6 +1,7 @@
 ---
 description: Enforce Separation of Concerns Between Layers
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

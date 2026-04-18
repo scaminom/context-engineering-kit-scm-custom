@@ -1,6 +1,7 @@
 ---
 description: REST API design — resource naming, status codes, pagination, filtering, errors, versioning.
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # REST API Design

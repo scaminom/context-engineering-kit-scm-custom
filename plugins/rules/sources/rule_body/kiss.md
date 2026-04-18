@@ -1,6 +1,7 @@
 ---
 description: KISS — Keep It Simple, Stupid. Prefer the simplest design that solves the problem.
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # KISS — Keep It Simple, Stupid

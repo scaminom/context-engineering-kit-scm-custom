@@ -1,6 +1,7 @@
 ---
 description: Explicit Control Flow and Policy-Mechanism Separation
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

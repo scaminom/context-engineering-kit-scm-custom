@@ -1,6 +1,7 @@
 ---
 description: Functional Core, Imperative Shell
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

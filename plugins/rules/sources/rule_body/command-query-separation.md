@@ -1,6 +1,7 @@
 ---
 description: Command-Query Separation (CQS)
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

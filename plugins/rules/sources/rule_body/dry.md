@@ -1,6 +1,7 @@
 ---
 description: DRY — Don't Repeat Yourself. Every piece of knowledge has a single, authoritative representation.
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # DRY — Don't Repeat Yourself

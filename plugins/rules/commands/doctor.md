@@ -1,29 +1,25 @@
 ---
-description: Audit .claude/rules/ and CLAUDE.md for consistency — orphans, broken pointers, missing skills, dead globs
+description: Audit .claude/rules/ for consistency — frontmatter shape, missing skills, dead paths
 argument-hint: No arguments
 ---
 
 # Rules Doctor
 
-Audit rule installation in this project. Report issues with concrete fix suggestions. Read-only — does not modify files.
+Audit rule installation in this project. Read-only — does not modify files.
 
-## Check 1 — Orphan rules
+Rules auto-load from `.claude/rules/*.md` (per [official Claude Code memory docs](https://code.claude.com/docs/en/memory#organize-rules-with-claude/rules/)) — no `CLAUDE.md` pointer is required or tracked.
 
-Rule files in `.claude/rules/` without a pointer under `## Agent docs` in `CLAUDE.md`.
+## Check 1 — Frontmatter shape
 
-Use Glob on `.claude/rules/*.md` and parse `CLAUDE.md` for pointer lines. Diff the sets.
+For each `.claude/rules/**/*.md`, Read the first ~15 lines and confirm frontmatter:
 
-For each orphan: suggest *"Add pointer line manually, or re-run `/rules:setup-<slug>` to regenerate."*
+- Opens/closes with `---`.
+- If `paths:` is present, it MUST be a YAML list (keys indented under, starting with `-`), NOT an inline JSON array like `["foo", "bar"]` and NOT a scalar.
+- Flag legacy `globs:` key — it is ignored by Claude Code and should be renamed to `paths:`.
 
-## Check 2 — Broken pointers
+For each violator: suggest *"Fix frontmatter to match `paths:` YAML list format (see `STACK_DETECTION.md`)."*
 
-Pointer lines in CLAUDE.md (under `## Agent docs`) referencing `.claude/rules/<slug>.md` files that don't exist.
-
-Parse pointer lines with a regex like `\`.claude/rules/([^`]+)\``, then check each file's existence with Glob.
-
-For each broken pointer: suggest *"Remove the line from CLAUDE.md or run `/rules:setup-<slug>` to reinstall."*
-
-## Check 3 — Missing skill references
+## Check 2 — Missing skill references
 
 Rules whose body contains a `## Skill reference` section mentioning skill name(s) that are NOT installed in `.claude/skills/`.
 
@@ -34,16 +30,20 @@ For each rule with skill-ref:
 
 For each: suggest *"Install with `/skills:setup-<skill>` (if the skill command exists in this marketplace) or note that the referenced skill is unavailable in this project."*
 
-## Check 4 — Dead globs
+## Check 3 — Dead paths
 
-Rules whose `globs:` patterns match zero files in the project.
+Rules whose `paths:` patterns match zero files in the project.
 
 For each rule:
-- Parse `globs:` from frontmatter.
+- Parse `paths:` from frontmatter.
 - For each pattern, run Glob. Count matches.
 - If total matches across all patterns is zero, flag it.
 
-For each: suggest *"The rule's globs don't match any files. Re-run `/rules:setup-<slug>` to re-detect the stack, or edit the globs manually."*
+For each: suggest *"The rule's paths don't match any files. Re-run `/rules:setup-<slug>` to re-detect the stack, or edit the `paths:` list manually."*
+
+## Check 4 — Legacy `## Agent docs` pointer section (informational)
+
+Previous versions of this plugin registered pointer lines under `## Agent docs` in `CLAUDE.md`. This is no longer needed — rules auto-load from disk. If `CLAUDE.md` contains such a section, suggest: *"The `## Agent docs` section in CLAUDE.md is legacy and can be removed to save context tokens. Claude Code auto-loads `.claude/rules/*.md` without pointers."*
 
 ## Report
 
@@ -54,23 +54,22 @@ Output a sectioned report:
 
 ## Summary
 - Total rules: N
-- Issues found: N (orphans: N, broken: N, missing skills: N, dead globs: N)
+- Issues found: N (frontmatter: N, missing skills: N, dead paths: N, legacy pointers: N)
 - Status: OK / ATTENTION NEEDED
 
 ## Issues
 
-### Orphan rules (N)
-- `slug1` — path, suggested fix
-- ...
-
-### Broken pointers (N)
-- ...
+### Frontmatter issues (N)
+- `slug` — path, suggested fix
 
 ### Missing skill references (N)
 - ...
 
-### Dead globs (N)
+### Dead paths (N)
 - ...
+
+### Legacy `## Agent docs` pointer section
+- present / absent (with fix suggestion)
 ```
 
 If `Issues found = 0`, report a single-line *"All good. N rules, all consistent."*

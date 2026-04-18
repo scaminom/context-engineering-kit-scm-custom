@@ -1,6 +1,7 @@
 ---
 description: Use Existing Libraries Instead of Custom Code
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

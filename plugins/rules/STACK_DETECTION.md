@@ -1,12 +1,14 @@
-# Stack Detection & Glob Inference
+# Stack Detection & Path Inference
 
 Shared routine for all `/rules:setup-*` commands. Read this file during command execution; do NOT inline it into command prompts.
+
+Rules auto-load from `.claude/rules/*.md` — no `CLAUDE.md` pointer needed. See [official docs](https://code.claude.com/docs/en/memory#organize-rules-with-claude/rules/) for the `paths:` frontmatter contract.
 
 ## Detection order (first match wins)
 
 Use Glob / Read against the project root. Check in this order (most specific first):
 
-| # | Marker file(s) | Stack | Globs (JSON array) | Human summary |
+| # | Marker file(s) | Stack | Paths (list) | Human summary |
 |---|---|---|---|---|
 | 1 | `angular.json` | Angular | `["src/app/**/*.ts"]` | `src/app/**/*.ts` |
 | 2 | `nest-cli.json` | NestJS | `["src/**/*.ts"]` | `src/**/*.ts` |
@@ -36,51 +38,31 @@ Every `/rules:setup-*` command should follow this skeleton:
    MARKETPLACE=$(find ~/.claude/plugins/marketplaces -maxdepth 2 -type d -name "context-engineering-kit-scm" 2>/dev/null | head -1)
    If empty -> stop with error.
 
-2. Detect stack using the table above. Compute GLOBS (JSON array) and SUMMARY (human text).
+2. Detect stack using the table above. Get PATHS_ARRAY (e.g. ["src/app/**/*.ts"]) and SUMMARY (human text).
 
 3. Copy rule body:
    mkdir -p .claude/rules
    cp "$MARKETPLACE/plugins/rules/sources/rule_body/<slug>.md" .claude/rules/<slug>.md
 
-4. Inject globs: Edit .claude/rules/<slug>.md to replace the literal token "__GLOBS__" with GLOBS.
+4. Inject paths as YAML list: Edit .claude/rules/<slug>.md to replace the literal token "__PATHS__" with a YAML list built from PATHS_ARRAY. Format EXACTLY:
+
+   For PATHS_ARRAY = ["src/app/**/*.ts"] emit:
+       - "src/app/**/*.ts"
+
+   For PATHS_ARRAY = ["src/**/*.{ts,tsx}", "app/**/*.{ts,tsx}"] emit:
+       - "src/**/*.{ts,tsx}"
+       - "app/**/*.{ts,tsx}"
+
+   Indentation: 2 spaces before `-`. Each entry on its own line. Quote each pattern with double quotes.
 
 5. (Only for skill-ref rules) Ask user:
    "Reference the `<skill-name>` skill in this rule? When the agent reads this rule and is about to do <activity>, the rule will suggest invoking `<skill-name>` and will ask you (the user) first before invoking. (y/n)"
    If y:
      cat "$MARKETPLACE/plugins/rules/sources/rule_references/<slug>.md" >> .claude/rules/<slug>.md
 
-6. Register pointer in CLAUDE.md (see POINTER_REGISTRATION below).
-
-7. Report: stack detected, globs used, skill-ref included?, file path written, CLAUDE.md action.
+6. Report: stack detected, paths used, skill-ref included?, file path written.
 ```
 
-## POINTER_REGISTRATION
+## Why no CLAUDE.md pointer
 
-Read CLAUDE.md at project root.
-
-- **Missing** → create with:
-
-  ```markdown
-  # Project
-
-  ## Agent docs
-
-  - `.claude/rules/<slug>.md` — <rule description> (auto-loads on <SUMMARY>)
-  ```
-
-- **Present with `## Agent docs` section** → Edit: append pointer line under the section. Skip if exact line already present.
-
-- **Present without `## Agent docs`** → Edit: append new section at end:
-
-  ```markdown
-
-  ## Agent docs
-
-  - `.claude/rules/<slug>.md` — <rule description> (auto-loads on <SUMMARY>)
-  ```
-
-`<rule description>` is a short human label (different from rule's full `description:` field). Examples:
-- `solid.md` → "SOLID principles"
-- `yagni.md` → "YAGNI"
-- `clean-architecture-ddd.md` → "Clean Architecture / DDD"
-- `dotnet.md` → ".NET coding guidance"
+Per the official [Claude Code memory docs](https://code.claude.com/docs/en/memory#organize-rules-with-claude/rules/), any `.md` file inside `.claude/rules/` is auto-discovered and loaded into the session — unconditionally if no `paths:` frontmatter, or conditionally when files matching `paths:` are opened. A pointer line under `## Agent docs` in `CLAUDE.md` is redundant and wastes context tokens. Do not register pointers.

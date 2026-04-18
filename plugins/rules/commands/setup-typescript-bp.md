@@ -1,11 +1,11 @@
 ---
-description: Install TypeScript best practices as a project rule (fixed globs ["**/*.ts", "**/*.tsx"])
+description: Install TypeScript best practices as a project rule (fixed paths ["**/*.ts", "**/*.tsx"])
 argument-hint: No arguments
 ---
 
 # Setup TypeScript Best Practices Rule
 
-Install `.claude/rules/typescript-bp.md` from bundled source. Globs are fixed to `["**/*.ts", "**/*.tsx"]` — no stack inference.
+Install `.claude/rules/typescript-bp.md` from bundled source. Paths are fixed to `**/*.ts` and `**/*.tsx` — no stack inference.
 
 ## 1. Locate marketplace
 
@@ -26,15 +26,8 @@ mkdir -p .claude/rules
 cp "$MARKETPLACE/plugins/rules/sources/rule_body/typescript-bp.md" .claude/rules/typescript-bp.md
 ```
 
-No `__GLOBS__` replacement needed — the source file has fixed globs baked in.
+The source file already has the `paths:` frontmatter baked in — no token replacement needed.
 
-## 4. Register pointer in CLAUDE.md
+## 4. Report
 
-Follow the POINTER_REGISTRATION routine from `$MARKETPLACE/plugins/rules/STACK_DETECTION.md` with:
-- `<slug>` = `typescript-bp`
-- `<rule description>` = `TypeScript best practices`
-- `<SUMMARY>` = `**/*.ts, **/*.tsx`
-
-## 5. Report
-
-`tsconfig.json` found? · file written · CLAUDE.md action.
+`tsconfig.json` found? · file written at `.claude/rules/typescript-bp.md`.

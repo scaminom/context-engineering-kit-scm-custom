@@ -1,6 +1,7 @@
 ---
 description: Explicit Side Effects and Call-Site Transparency
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

@@ -1,6 +1,7 @@
 ---
 description: YAGNI — You Aren't Gonna Need It. Implement only what is required now.
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # YAGNI — You Aren't Gonna Need It

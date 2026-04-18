@@ -1,6 +1,7 @@
 ---
 description: Separate Domain Logic from Infrastructure
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

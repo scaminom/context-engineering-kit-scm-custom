@@ -1,6 +1,7 @@
 ---
 description: Explicit Data Flow
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

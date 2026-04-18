@@ -9,15 +9,15 @@ Install every rule shipped by this plugin. Follows the **Standard command flow**
 
 ## Step 0 — Confirm
 
-Tell the user: *"This will install 20 rules into `.claude/rules/` and add 20 pointer lines to `CLAUDE.md`. It will also prompt 3 times (once per skill-reference rule). Proceed? (y/n)"* — stop on `n`.
+Tell the user: *"This will install 20 rules into `.claude/rules/`. It will also prompt 3 times (once per skill-reference rule). Proceed? (y/n)"* — stop on `n`.
 
 ## Step 1 — Detect stack once
 
-Apply the STACK_DETECTION table. Save `GLOBS` and `SUMMARY`. Do not re-prompt for subsequent rules.
+Apply the STACK_DETECTION table. Save `PATHS_ARRAY` and `SUMMARY`. Do not re-prompt for subsequent rules.
 
 ## Step 2 — Install each rule
 
-Run the Standard command flow (copy source → inject globs → append skill-ref if applicable → register pointer) for each row:
+Run the Standard command flow (copy source → inject paths → append skill-ref if applicable) for each row:
 
 ### Standalone rules (skill-ref: none)
 
@@ -54,14 +54,13 @@ For each, prompt verbatim the skill question from the Standard command flow:
 
 ### Rules that require a specific stack
 
-- `dotnet` (slug `dotnet`, description `.NET coding guidance`, skill-ref `dotnet-expert`, globs forced to `["**/*.cs", "**/*.csproj"]`): install ONLY if `*.csproj` / `global.json` / `*.sln` exists. Otherwise skip and mention at report.
+- `dotnet` (slug `dotnet`, description `.NET coding guidance`, skill-ref `dotnet-expert`, paths forced to `["**/*.cs", "**/*.csproj"]`): install ONLY if `*.csproj` / `global.json` / `*.sln` exists. Otherwise skip and mention at report.
 
 ## Step 3 — Report
 
 Show:
-- Stack detected + globs used.
+- Stack detected + paths used.
 - Rules written (count).
 - Rules skipped + reason (e.g. `dotnet` skipped: no .NET markers).
 - Skill references embedded (list).
-- CLAUDE.md action: created or updated with N pointer lines.
-- Follow-up tip: *"Install referenced skills per-project with `/skills:setup-*` as needed."*
+- Follow-up tip: *"Install referenced skills per-project with `/skills:setup-*` as needed. Rules auto-load from `.claude/rules/` — no `CLAUDE.md` changes required."*

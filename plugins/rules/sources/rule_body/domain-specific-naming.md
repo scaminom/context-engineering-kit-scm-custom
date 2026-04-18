@@ -1,6 +1,7 @@
 ---
 description: Use Domain-Specific Names Instead of Generic Module Names
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 

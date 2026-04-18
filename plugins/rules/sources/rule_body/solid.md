@@ -1,6 +1,7 @@
 ---
 description: SOLID principles for object-oriented and modular design
-globs: __GLOBS__
+paths:
+__PATHS__
 ---
 
 # SOLID Principles
